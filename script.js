@@ -1,32 +1,24 @@
-// === 題庫地區對應表 ===
+// 題庫地區對應表（以國家分類）
 const SHEET_MAP = {
-  france_bordeaux: "https://opensheet.vercel.app/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/France_Bordeaux",
-  france_loire: "https://opensheet.vercel.app/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/France_Loire",
-  italy_alto_adige: "https://opensheet.vercel.app/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/Italy_Alto_Adige",
-  italy_lombardy: "https://opensheet.vercel.app/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/Italy_Lombardy",
-  italy_marche: "https://opensheet.vercel.app/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/Italy_Marche",
-  spain_green: "https://opensheet.vercel.app/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/Spain_Green"
+  italy_alto_adige: "https://opensheet.vercel.app/.../Italy_Alto_Adige",
+  italy_lombardy: "https://opensheet.vercel.app/.../Italy_Lombardy",
+  italy_marche: "https://opensheet.vercel.app/.../Italy_Marche",
+  france_bordeaux: "https://opensheet.vercel.app/.../France_Bordeaux",
+  france_loire: "https://opensheet.vercel.app/.../France_Loire",
+  spain_green: "https://opensheet.vercel.app/.../Spain_Green"
 };
 
 let data = [];
 let quizData = [];
 let currentQuestion = 0;
 let correctAnswers = 0;
-let timer;
-let timeLeft = 20;
 let lang = 'zh';
 let selectedRegions = [];
-
-const sounds = {
-  correct: document.getElementById('sound-correct'),
-  wrong: document.getElementById('sound-wrong'),
-  timeup: document.getElementById('sound-timeup'),
-};
 
 function setupRegionCheckboxes() {
   const container = document.getElementById('region-checkboxes');
   container.innerHTML = '';
-  Object.entries(SHEET_MAP).forEach(([key, url]) => {
+  Object.entries(SHEET_MAP).forEach(([key]) => {
     const label = document.createElement('label');
     label.className = 'flex items-center gap-1';
     const checkbox = document.createElement('input');
@@ -66,23 +58,11 @@ function startQuiz() {
   currentQuestion = 0;
   correctAnswers = 0;
   document.getElementById('result').classList.add('hidden');
-  document.getElementById('quiz-container').style.display = 'block';
+  document.getElementById('quiz-container')?.remove(); // 兼容舊結構
   showQuestion();
 }
 
 function showQuestion() {
-  clearInterval(timer);
-  timeLeft = 20;
-  updateTimerUI(timeLeft);
-  timer = setInterval(() => {
-    timeLeft--;
-    updateTimerUI(timeLeft);
-    if (timeLeft <= 0) {
-      clearInterval(timer);
-      selectAnswer(false, true);
-    }
-  }, 1000);
-
   const q = quizData[currentQuestion];
   const options = [q['法定產區']];
   while (options.length < 4) {
@@ -91,9 +71,9 @@ function showQuestion() {
   }
   options.sort(() => 0.5 - Math.random());
 
-  const level = lang === 'zh' ? q['法定等級'] : q['法定等級'];
-  const grape = lang === 'zh' ? q['主要品種'] : q['主要品種'];
-  const flavor = lang === 'zh' ? q['風味特徵'] : q['風味特徵'];
+  const level = q['法定等級'];
+  const grape = q['主要品種'];
+  const flavor = q['風味特徵'];
 
   const questionText = lang === 'zh'
     ? `這是款 ${level}，主要使用 ${grape} 釀製，可以是 ${flavor}，請問來自哪個法定產區？`
@@ -110,7 +90,7 @@ function showQuestion() {
     btn.className = 'w-full text-left bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded';
     btn.onclick = () => {
       Array.from(optionsDiv.children).forEach(b => b.disabled = true);
-      selectAnswer(opt === q['法定產區']);
+      selectAnswer(opt === q['法定產區'], q['法定產區']);
     };
     optionsDiv.appendChild(btn);
   });
@@ -119,24 +99,18 @@ function showQuestion() {
   document.getElementById('next-button').classList.add('hidden');
 }
 
-function updateTimerUI(seconds) {
-  document.getElementById('timer').textContent = `⏰ ${seconds} ${lang === 'zh' ? '秒' : 'sec'}`;
-}
-
-function selectAnswer(correct, isTimeout = false) {
-  clearInterval(timer);
+function selectAnswer(correct, correctAnswer = '') {
   const feedback = document.getElementById('feedback');
   if (correct) {
     feedback.textContent = lang === 'zh' ? '✅ 答對了！' : '✅ Correct!';
     feedback.className = 'text-green-600 mt-4 font-semibold';
     correctAnswers++;
-    sounds.correct.play();
   } else {
-    feedback.textContent = isTimeout
-      ? (lang === 'zh' ? '⌛ 時間到！' : '⌛ Time up!')
-      : (lang === 'zh' ? '❌ 答錯了！' : '❌ Wrong!');
+    const text = lang === 'zh'
+      ? `❌ 答錯了！正確答案是：${correctAnswer}`
+      : `❌ Wrong! Correct answer: ${correctAnswer}`;
+    feedback.textContent = text;
     feedback.className = 'text-red-600 mt-4 font-semibold';
-    isTimeout ? sounds.timeup.play() : sounds.wrong.play();
   }
   document.getElementById('next-button').classList.remove('hidden');
 }
@@ -151,7 +125,6 @@ document.getElementById('next-button').onclick = () => {
 };
 
 function showResult() {
-  document.getElementById('quiz-container').style.display = 'none';
   document.getElementById('result').classList.remove('hidden');
   document.getElementById('score').textContent =
     lang === 'zh'
@@ -166,7 +139,7 @@ document.getElementById('save-score').onclick = () => {
     alert(lang === 'zh' ? '請輸入暱稱' : 'Please enter your name');
     return;
   }
-  const key = 'leaderboard_mixed'; // 多地區合併儲存
+  const key = 'leaderboard_mixed';
   const board = JSON.parse(localStorage.getItem(key) || '[]');
   board.push({ name, score: correctAnswers });
   board.sort((a, b) => b.score - a.score);
@@ -187,5 +160,4 @@ function renderLeaderboard() {
 }
 
 document.getElementById('restart-button').onclick = startQuiz;
-
 window.onload = setupRegionCheckboxes;
