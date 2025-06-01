@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
-
   <div class="max-w-3xl w-full bg-white p-6 rounded-xl shadow-lg">
 
     <!-- 標題與控制列 -->
@@ -29,9 +28,6 @@
         <!-- JS 動態載入地區清單 -->
       </div>
     </div>
-
-    <!-- 倒數計時 -->
-    <div id="timer" class="text-right text-red-600 font-semibold mb-1">⏰ 20 秒</div>
 
     <!-- 題目進度 -->
     <div id="question-progress" class="text-sm text-gray-600 mb-2">第 1 / 10 題</div>
@@ -68,12 +64,7 @@
     </div>
   </div>
 
-  <!-- 音效 -->
-  <audio id="sound-correct" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-reward-952.mp3"></audio>
-  <audio id="sound-wrong" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
-  <audio id="sound-timeup" src="https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3"></audio>
-
-  <!-- 程式碼 -->
+  <!-- JS 程式碼 -->
   <script src="script.js"></script>
 </body>
 </html>
