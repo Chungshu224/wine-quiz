@@ -14,15 +14,23 @@ async function fetchSheetNames(sheetId) {
   const url = `https://opensheet.vercel.app/${sheetId}`;
   try {
     const res = await fetch(url);
-    if (!res.ok) throw new Error('資料請求失敗');
+    if (!res.ok) throw new Error('資料請求失敗, 狀態碼: ' + res.status);
     const sheets = await res.json();
     if (Array.isArray(sheets)) {
+      // 檢查陣列內容結構
+      if (sheets.length === 0) {
+        alert('Google Sheet 沒有任何分頁，請確認資料。');
+        return [];
+      }
       return sheets.map(item => item.sheetName || item.name);
     }
+    alert('資料格式錯誤（非陣列）');
     return [];
   } catch (error) {
-    console.error('取得分頁名稱時發生錯誤:', error);
-    alert('載入資料時發生錯誤，請稍後再試。');
+    console.error('取得分頁名稱時發生錯誤:', error, url);
+    alert(
+      '載入資料時發生錯誤，請確認 Google Sheet 分享設定、sheetId 是否正確，或稍後再試。\n\n錯誤訊息：' + error.message
+    );
     return [];
   }
 }
