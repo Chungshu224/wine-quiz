@@ -170,7 +170,12 @@ function showQuiz(selected) {
  */
 function handleStartButtonClick() {
   const selected = Array.from(document.querySelectorAll('#region-checkboxes input:checked')).map(cb => cb.value);
-  showQuiz(selected);
+  if (selected.length === 0) {
+    alert('請至少選擇一個產區');
+    return;
+  }
+  localStorage.setItem('selectedRegions', JSON.stringify(selected));
+  window.location.href = 'quiz.html';
 }
 
 // 綁定事件與初始化畫面
