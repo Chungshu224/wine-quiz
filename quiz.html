@@ -1,34 +1,32 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>葡萄酒選擇題</title>
+  <meta charset="UTF-8">
+  <title>選擇葡萄酒題庫</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
-  <div class="max-w-3xl w-full bg-white p-6 rounded-xl shadow-lg">
-    <div id="quiz-container">
-      <div id="question-progress" class="text-sm text-gray-600 mb-2">第 1 / 10 題</div>
-      <div id="question" class="text-lg font-medium mb-4">題目載入中...</div>
-      <div id="options" class="grid gap-3"></div>
-      <div id="feedback" class="mt-4 font-semibold"></div>
-      <button id="next-button" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded hidden">下一題</button>
+  <main class="max-w-3xl w-full bg-white p-6 rounded-xl shadow-lg" aria-labelledby="main-title">
+    <header>
+      <h1 id="main-title" class="text-2xl font-bold mb-4 flex items-center gap-2" tabindex="0" aria-label="選擇題庫地區">
+        <span role="img" aria-label="書本">📚</span>
+        選擇題庫地區
+      </h1>
+    </header>
+    <section id="region-checkboxes" class="space-y-4" aria-label="地區勾選區塊" tabindex="0">
+      <!-- select.js 會自動載入產區選項 -->
+    </section>
+    <div class="text-center mt-6">
+      <button id="start-button" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-300" aria-label="開始作答">
+        開始作答
+      </button>
     </div>
-    <div id="result" class="hidden mt-6 text-center">
-      <p class="text-xl font-bold mb-2">🎉 測驗完成！</p>
-      <p id="score" class="text-lg mb-2"></p>
-      <div class="flex justify-center items-center gap-2 mt-2">
-        <input id="player-name" type="text" placeholder="請輸入暱稱" class="border px-2 py-1 rounded" />
-        <button id="save-score" class="bg-green-600 text-white px-3 py-1 rounded">儲存紀錄</button>
-      </div>
-      <button id="restart-button" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">重新挑選題庫</button>
-    </div>
-    <div class="mt-8">
-      <h2 class="text-lg font-semibold mb-2">🏆 排行榜</h2>
-      <ul id="leaderboard" class="list-disc pl-5 text-gray-700 text-sm"></ul>
-    </div>
-  </div>
-  <script src="quiz.js"></script>
+    <noscript>
+      <p class="text-red-600 mt-4">請啟用 JavaScript 以使用此功能。</p>
+    </noscript>
+  </main>
+  <script src="select.js" defer></script>
 </body>
 </html>
