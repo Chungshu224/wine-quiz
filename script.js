@@ -1,71 +1,24 @@
+// 題庫來源：一國一檔
 const SHEET_MAP = {
-  italy: {
-    "Alto Adige": "https://opensheet.vercel.app/.../Italy_Alto_Adige",
-    "Lombardy": "https://opensheet.vercel.app/.../Italy_Lombardy",
-    "Marche": "https://opensheet.vercel.app/.../Italy_Marche"
-  },
-  france: {
-    "Bordeaux": "https://opensheet.vercel.app/.../France_Bordeaux",
-    "Loire": "https://opensheet.vercel.app/.../France_Loire"
-  },
-  spain: {
-    "Green Spain": "https://opensheet.vercel.app/.../Spain_Green"
-  }
+  italy: "https://opensheet.vercel.app/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/Italy",
+  france: "https://opensheet.vercel.app/1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU/France",
+  spain: "https://opensheet.vercel.app/1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY/Spain"
 };
 
-let selectedRegions = [];
-let regionURLMap = {};
 let data = [];
 let quizData = [];
 let currentQuestion = 0;
 let correctAnswers = 0;
 
-function setupRegionCheckboxes() {
-  const container = document.getElementById('region-checkboxes');
-  container.innerHTML = '';
-
-  for (const [country, regions] of Object.entries(SHEET_MAP)) {
-    const section = document.createElement('div');
-    section.className = 'border rounded';
-
-    const header = document.createElement('button');
-    header.textContent = country.toUpperCase();
-    header.className = 'w-full text-left px-4 py-2 bg-gray-200 font-semibold';
-    header.onclick = () => {
-      content.classList.toggle('hidden');
-    };
-
-    const content = document.createElement('div');
-    content.className = 'px-4 py-2 space-y-1';
-
-    for (const [regionName, url] of Object.entries(regions)) {
-      const label = document.createElement('label');
-      label.className = 'flex items-center gap-1';
-      const checkbox = document.createElement('input');
-      const regionKey = `${country}_${regionName.replace(/\s+/g, '_')}`;
-      checkbox.type = 'checkbox';
-      checkbox.value = regionKey;
-      checkbox.checked = true;
-      regionURLMap[regionKey] = url;
-      label.appendChild(checkbox);
-      label.appendChild(document.createTextNode(regionName));
-      content.appendChild(label);
-    }
-
-    section.appendChild(header);
-    section.appendChild(content);
-    container.appendChild(section);
-  }
-}
-
 document.getElementById('start-button').onclick = async () => {
-  selectedRegions = Array.from(document.querySelectorAll('#region-checkboxes input:checked')).map(cb => cb.value);
+  const selectedRegions = Array.from(document.querySelectorAll('#region-checkboxes input:checked'))
+    .map(cb => cb.value);
   if (selectedRegions.length === 0) {
-    alert('請至少選擇一個地區');
+    alert('請至少選擇一個國家');
     return;
   }
 
-  const urls = selectedRegions.map(key => regionURLMap[key]);
+  const urls = selectedRegions.map(region => SHEET_MAP[region]);
   const results = await Promise.all(urls.map(url => fetch(url).then(r => r.json())));
   data = results.flat().filter(entry => entry['法定產區']);
   startQuiz();
@@ -89,8 +42,10 @@ function showQuestion() {
   }
   options.sort(() => 0.5 - Math.random());
 
-  document.getElementById('question').textContent = `這是款 ${q['法定等級']}，主要使用 ${q['主要品種']} 釀製，可以是 ${q['風味特徵']}，請問來自哪個法定產區？`;
-  document.getElementById('question-progress').textContent = `第 ${currentQuestion + 1} / ${quizData.length} 題`;
+  document.getElementById('question').textContent =
+    `這是款 ${q['法定等級']}，主要使用 ${q['主要品種']} 釀製，可以是 ${q['風味特徵']}，請問來自哪個法定產區？`;
+  document.getElementById('question-progress').textContent =
+    `第 ${currentQuestion + 1} / ${quizData.length} 題`;
 
   const optionsDiv = document.getElementById('options');
   optionsDiv.innerHTML = '';
@@ -134,7 +89,8 @@ document.getElementById('next-button').onclick = () => {
 function showResult() {
   document.getElementById('quiz-container').classList.add('hidden');
   document.getElementById('result').classList.remove('hidden');
-  document.getElementById('score').textContent = `你答對了 ${correctAnswers} / ${quizData.length} 題`;
+  document.getElementById('score').textContent =
+    `你答對了 ${correctAnswers} / ${quizData.length} 題`;
   renderLeaderboard();
 }
 
@@ -152,8 +108,6 @@ document.getElementById('save-score').onclick = () => {
   document.getElementById('player-name').value = '';
 };
 
-document.getElementById('restart-button').onclick = startQuiz;
-
 function renderLeaderboard() {
   const list = document.getElementById('leaderboard');
   const board = JSON.parse(localStorage.getItem('leaderboard') || '[]');
@@ -165,4 +119,4 @@ function renderLeaderboard() {
   });
 }
 
-window.onload = setupRegionCheckboxes;
+document.getElementById('restart-button').onclick = startQuiz;
