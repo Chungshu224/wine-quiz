@@ -1,36 +1,43 @@
-// 儲存各國的試算表網址
+// 儲存各國的 Google Sheet ID 與國旗 emoji
 const SHEET_INDEX = {
-  italy: "https://opensheet.vercel.app/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/",
-  france: "https://opensheet.vercel.app/1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU/",
-  spain: "https://opensheet.vercel.app/1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY/"
+  italy: {
+    id: "1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA",
+    label: "義大利",
+    flag: "🇮🇹"
+  },
+  france: {
+    id: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU",
+    label: "法國",
+    flag: "🇫🇷"
+  },
+  spain: {
+    id: "1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY",
+    label: "西班牙",
+    flag: "🇪🇸"
+  }
 };
 
+// 你的 Google Sheets API 金鑰
+const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
+
 /**
- * 取得指定 Google Sheet 的所有分頁名稱
- * @param {string} sheetId 
+ * 取得指定 Google Sheet 的所有分頁名稱（用 Google Sheets API）
+ * @param {string} sheetId
  * @returns {Promise<Array<string>>}
  */
 async function fetchSheetNames(sheetId) {
-  const url = `https://opensheet.vercel.app/${sheetId}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets(properties(title))&key=${API_KEY}`;
   try {
     const res = await fetch(url);
-    if (!res.ok) throw new Error('資料請求失敗, 狀態碼: ' + res.status);
-    const sheets = await res.json();
-    if (Array.isArray(sheets)) {
-      // 檢查陣列內容結構
-      if (sheets.length === 0) {
-        alert('Google Sheet 沒有任何分頁，請確認資料。');
-        return [];
-      }
-      return sheets.map(item => item.sheetName || item.name);
+    if (!res.ok) throw new Error('資料請求失敗，請檢查 API 金鑰與 Google Sheet 權限');
+    const data = await res.json();
+    if (!data.sheets || !Array.isArray(data.sheets)) {
+      throw new Error('資料格式錯誤');
     }
-    alert('資料格式錯誤（非陣列）');
-    return [];
+    return data.sheets.map(s => s.properties.title);
   } catch (error) {
     console.error('取得分頁名稱時發生錯誤:', error, url);
-    alert(
-      '載入資料時發生錯誤，請確認 Google Sheet 分享設定、sheetId 是否正確，或稍後再試。\n\n錯誤訊息：' + error.message
-    );
+    alert('載入資料時發生錯誤，請確認 Google Sheet 權限與 API Key 是否有效。\n\n錯誤訊息：' + error.message);
     return [];
   }
 }
@@ -38,10 +45,10 @@ async function fetchSheetNames(sheetId) {
 /**
  * 建立國家標題按鈕
  */
-function createHeader(country, sheetCount, body) {
+function createHeader(country, flag, label, sheetCount, body) {
   const header = document.createElement('button');
   header.type = 'button';
-  header.textContent = `🇺🇸 ${country.toUpperCase()}（${sheetCount} 產區）`;
+  header.innerHTML = `<span class="mr-2">${flag}</span>${label}（${sheetCount} 產區）`;
   header.className = 'w-full text-left px-4 py-2 bg-gray-200 font-semibold';
   header.setAttribute('aria-expanded', 'false');
   header.onclick = () => {
@@ -101,13 +108,13 @@ async function renderRegionUI() {
     return;
   }
   container.innerHTML = ''; // 清空現有內容
-  for (const [country, sheetId] of Object.entries(SHEET_INDEX)) {
-    const sheets = await fetchSheetNames(sheetId);
+  for (const [countryKey, countryData] of Object.entries(SHEET_INDEX)) {
+    const sheets = await fetchSheetNames(countryData.id);
     const section = document.createElement('div');
     section.className = 'border rounded mb-4';
 
-    const body = createRegionBody(country, sheets);
-    const header = createHeader(country, sheets.length, body);
+    const body = createRegionBody(countryKey, sheets);
+    const header = createHeader(countryKey, countryData.flag, countryData.label, sheets.length, body);
     const control = createControlButton(body);
 
     section.appendChild(header);
