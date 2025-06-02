@@ -1,8 +1,8 @@
 // 題庫來源：一國一檔
 const SHEET_MAP = {
-  italy: "https://opensheet.vercel.app/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/italy",
-  france: "https://opensheet.vercel.app/1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU/france",
-  spain: "https://opensheet.vercel.app/1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY/spain"
+  italy: "https://opensheet.elk.sh/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/italy",
+  france: "https://opensheet.elk.sh/1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU/france",
+  spain: "https://opensheet.elk.sh/1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY/spain"
 };
 
 let data = [];
