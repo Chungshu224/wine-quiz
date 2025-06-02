@@ -1,7 +1,7 @@
 const SHEET_INDEX = {
-  italy: "1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA",
-  france: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU",
-  spain: "1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY"
+  italy: "https://opensheet.elk.sh/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA",
+  france: "https://opensheet.elk.sh/1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU",
+  spain: "https://opensheet.elk.sh/1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY"
 };
 
 async function fetchSheetNames(sheetId) {
