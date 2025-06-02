@@ -144,28 +144,6 @@ async function renderRegionUI() {
 }
 
 /**
- * 顯示題目（簡易 demo，僅顯示選擇的產區清單）
- * 你可依需求改成實際題目呈現
- */
-function showQuiz(selected) {
-  const quizContainer = document.getElementById('quiz-container');
-  quizContainer.innerHTML = '';
-  if (selected.length === 0) {
-    quizContainer.innerHTML = '<p class="text-red-600">請至少選擇一個產區再開始作答。</p>';
-    return;
-  }
-  // 這裡僅示範顯示選擇的產區
-  const ul = document.createElement('ul');
-  selected.forEach(val => {
-    const li = document.createElement('li');
-    li.textContent = val;
-    ul.appendChild(li);
-  });
-  quizContainer.innerHTML = '<h2 class="text-lg font-bold mb-2">你選擇的產區：</h2>';
-  quizContainer.appendChild(ul);
-}
-
-/**
  * 處理開始按鈕點擊
  */
 function handleStartButtonClick() {
@@ -177,10 +155,7 @@ function handleStartButtonClick() {
   localStorage.setItem('selectedRegions', JSON.stringify(selected));
   window.location.href = 'quiz.html';
 }
- 
-console.log('Start button clicked');
-  // ... 你的選取判斷
-  window.location.href = 'quiz.html';
+
 // 綁定事件與初始化畫面
 document.getElementById('start-button').onclick = handleStartButtonClick;
 renderRegionUI();
