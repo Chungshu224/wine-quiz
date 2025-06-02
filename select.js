@@ -177,7 +177,8 @@ function handleStartButtonClick() {
   localStorage.setItem('selectedRegions', JSON.stringify(selected));
   window.location.href = 'quiz.html';
 }
- console.log('Start button clicked');
+ 
+console.log('Start button clicked');
   // ... 你的選取判斷
   window.location.href = 'quiz.html';
 // 綁定事件與初始化畫面
