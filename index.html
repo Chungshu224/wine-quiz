@@ -9,42 +9,28 @@
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
   <div class="max-w-3xl w-full bg-white p-6 rounded-xl shadow-lg">
 
-    <!-- 標題與控制列 -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+    <!-- 標題與開始按鈕 -->
+    <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">🌍 世界葡萄酒產區選擇題</h1>
-      <div class="flex gap-2">
-        <select id="language-select" class="border px-2 py-1 rounded">
-          <option value="zh">中文</option>
-          <option value="en">English</option>
-        </select>
-        <button id="start-button" class="bg-blue-600 text-white px-4 py-1 rounded">開始測驗</button>
-      </div>
+      <button id="start-button" class="bg-blue-600 text-white px-4 py-1 rounded">開始測驗</button>
     </div>
 
-    <!-- 題庫複選框 -->
+    <!-- 題庫選擇 -->
     <div class="mb-4">
       <p class="font-semibold mb-2">📚 請選擇地區（可複選）</p>
-      <div id="region-checkboxes" class="flex flex-wrap gap-3">
-        <!-- JS 動態載入地區清單 -->
-      </div>
+      <div id="region-checkboxes" class="space-y-2"></div>
     </div>
 
-    <!-- 題目進度 -->
-    <div id="question-progress" class="text-sm text-gray-600 mb-2">第 1 / 10 題</div>
+    <!-- 題目區域 -->
+    <div id="quiz-container" class="hidden">
+      <div id="question-progress" class="text-sm text-gray-600 mb-2">第 1 / 10 題</div>
+      <div id="question" class="text-lg font-medium mb-4">題目載入中...</div>
+      <div id="options" class="grid gap-3"></div>
+      <div id="feedback" class="mt-4 font-semibold"></div>
+      <button id="next-button" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded hidden">下一題</button>
+    </div>
 
-    <!-- 題目區 -->
-    <div id="question" class="text-lg font-medium mb-4">題目載入中...</div>
-
-    <!-- 選項區 -->
-    <div id="options" class="grid gap-3"></div>
-
-    <!-- 回饋區 -->
-    <div id="feedback" class="mt-4 font-semibold"></div>
-
-    <!-- 下一題按鈕 -->
-    <button id="next-button" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded hidden">下一題</button>
-
-    <!-- 測驗結果 -->
+    <!-- 結果與排行榜 -->
     <div id="result" class="hidden mt-6 text-center">
       <p class="text-xl font-bold mb-2">🎉 測驗完成！</p>
       <p id="score" class="text-lg mb-2"></p>
@@ -52,19 +38,15 @@
         <input id="player-name" type="text" placeholder="請輸入暱稱" class="border px-2 py-1 rounded" />
         <button id="save-score" class="bg-green-600 text-white px-3 py-1 rounded">儲存紀錄</button>
       </div>
-      <button id="restart-button" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">再玩一次</button>
+      <button id="restart-button" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">重新作答</button>
     </div>
 
-    <!-- 排行榜 -->
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-2">🏆 排行榜</h2>
-      <ul id="leaderboard" class="list-disc pl-5 text-gray-700 text-sm">
-        <!-- JS 動態填入 -->
-      </ul>
+      <ul id="leaderboard" class="list-disc pl-5 text-gray-700 text-sm"></ul>
     </div>
   </div>
 
-  <!-- JS 程式碼 -->
   <script src="script.js"></script>
 </body>
 </html>
