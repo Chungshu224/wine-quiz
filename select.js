@@ -76,7 +76,7 @@ function createControlButton(body) {
 }
 
 /**
- * 建立產區勾選區塊
+ * 建立產區勾選區塊（預設全部不選）
  */
 function createRegionBody(country, sheets) {
   const body = document.createElement('div');
@@ -85,7 +85,7 @@ function createRegionBody(country, sheets) {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.value = `${country}__${sheetName}`;
-    checkbox.checked = true;
+    checkbox.checked = false; // 預設全部不勾選
     checkbox.id = `cb_${country}_${sheetName}`;
     checkbox.setAttribute('aria-label', sheetName);
 
@@ -99,6 +99,20 @@ function createRegionBody(country, sheets) {
 }
 
 /**
+ * 建立「取消全部選擇」按鈕
+ */
+function createUncheckAllButton() {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'bg-red-100 text-red-700 px-3 py-1 rounded mb-4 mr-4';
+  btn.textContent = '取消全部選擇';
+  btn.onclick = () => {
+    document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+  };
+  return btn;
+}
+
+/**
  * 渲染所有國家與產區的 UI
  */
 async function renderRegionUI() {
@@ -108,6 +122,11 @@ async function renderRegionUI() {
     return;
   }
   container.innerHTML = ''; // 清空現有內容
+
+  // 先加上「取消全部選擇」按鈕
+  const uncheckAllBtn = createUncheckAllButton();
+  container.appendChild(uncheckAllBtn);
+
   for (const [countryKey, countryData] of Object.entries(SHEET_INDEX)) {
     const sheets = await fetchSheetNames(countryData.id);
     const section = document.createElement('div');
@@ -125,16 +144,33 @@ async function renderRegionUI() {
 }
 
 /**
+ * 顯示題目（簡易 demo，僅顯示選擇的產區清單）
+ * 你可依需求改成實際題目呈現
+ */
+function showQuiz(selected) {
+  const quizContainer = document.getElementById('quiz-container');
+  quizContainer.innerHTML = '';
+  if (selected.length === 0) {
+    quizContainer.innerHTML = '<p class="text-red-600">請至少選擇一個產區再開始作答。</p>';
+    return;
+  }
+  // 這裡僅示範顯示選擇的產區
+  const ul = document.createElement('ul');
+  selected.forEach(val => {
+    const li = document.createElement('li');
+    li.textContent = val;
+    ul.appendChild(li);
+  });
+  quizContainer.innerHTML = '<h2 class="text-lg font-bold mb-2">你選擇的產區：</h2>';
+  quizContainer.appendChild(ul);
+}
+
+/**
  * 處理開始按鈕點擊
  */
 function handleStartButtonClick() {
   const selected = Array.from(document.querySelectorAll('#region-checkboxes input:checked')).map(cb => cb.value);
-  if (selected.length === 0) {
-    alert('請至少選擇一個產區');
-    return;
-  }
-  localStorage.setItem('selectedRegions', JSON.stringify(selected));
-  window.location.href = 'quiz.html';
+  showQuiz(selected);
 }
 
 // 綁定事件與初始化畫面
