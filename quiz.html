@@ -2,31 +2,122 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>選擇葡萄酒題庫</title>
+  <title>葡萄酒題庫作答</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
-  <main class="max-w-3xl w-full bg-white p-6 rounded-xl shadow-lg" aria-labelledby="main-title">
+  <main class="max-w-3xl w-full bg-white p-6 rounded-xl shadow-lg">
     <header>
-      <h1 id="main-title" class="text-2xl font-bold mb-4 flex items-center gap-2" tabindex="0" aria-label="選擇題庫地區">
-        <span role="img" aria-label="書本">📚</span>
-        選擇題庫地區
+      <h1 class="text-2xl font-bold mb-4 flex items-center gap-2" tabindex="0">
+        <span role="img" aria-label="問答">🍷</span>
+        葡萄酒題庫作答
       </h1>
     </header>
-    <section id="region-checkboxes" class="space-y-4" aria-label="地區勾選區塊" tabindex="0">
-      <!-- select.js 會自動載入產區選項 -->
-    </section>
-    <div class="text-center mt-6">
-      <button id="start-button" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-300" aria-label="開始作答">
-        開始作答
-      </button>
-    </div>
+    <div id="debug-info" class="text-sm text-red-600 mb-4"></div>
+    <section id="quiz-content" aria-label="題目區"></section>
     <noscript>
       <p class="text-red-600 mt-4">請啟用 JavaScript 以使用此功能。</p>
     </noscript>
   </main>
-  <script src="select.js" defer></script>
+  <script>
+    // 設定資料
+    const SHEET_INDEX = {
+      italy: {
+        id: "1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA",
+        label: "義大利",
+        flag: "🇮🇹"
+      },
+      france: {
+        id: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU",
+        label: "法國",
+        flag: "🇫🇷"
+      },
+      spain: {
+        id: "1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY",
+        label: "西班牙",
+        flag: "🇪🇸"
+      }
+    };
+    const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
+    const debug = (msg) => {
+      document.getElementById('debug-info').innerText = msg;
+      console.warn(msg);
+    };
+
+    // 取得使用者選擇
+    let selected = [];
+    try {
+      selected = JSON.parse(localStorage.getItem('selectedRegions')) || [];
+    } catch (e) {
+      debug("偵錯：無法取得選擇資訊，請回到上一頁重新選擇。");
+    }
+
+    if (!selected.length) {
+      debug("偵錯：沒有選擇任何產區，請回到上一頁勾選。");
+    }
+
+    // 解析選擇
+    function parseSelection(str) {
+      // 格式：italy__義大利北部
+      const [country, sheet] = str.split('__');
+      return {country, sheet};
+    }
+
+    // 取得 Google Sheet 題庫
+    async function fetchSheetData(sheetId, sheetName) {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}?key=${API_KEY}`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          debug(`偵錯：API 請求失敗，狀態碼 ${res.status}。請檢查 Google Sheet 權限與 API Key。`);
+          return null;
+        }
+        const data = await res.json();
+        return data.values;
+      } catch (e) {
+        debug("偵錯：資料抓取失敗，詳細：" + e.message);
+        return null;
+      }
+    }
+
+    // 顯示題庫資料
+    async function showQuiz() {
+      const container = document.getElementById('quiz-content');
+      container.innerHTML = '';
+      if (!selected.length) {
+        container.innerHTML = '<p class="text-red-600">沒有選擇產區，請回到上一頁。</p>';
+        return;
+      }
+      for (const region of selected) {
+        const {country, sheet} = parseSelection(region);
+        const sheetId = SHEET_INDEX[country]?.id;
+        const countryLabel = SHEET_INDEX[country]?.label || country;
+        const flag = SHEET_INDEX[country]?.flag || '';
+        if (!sheetId) {
+          debug(`偵錯：找不到 ${country} 的 Sheet ID`);
+          continue;
+        }
+        const values = await fetchSheetData(sheetId, sheet);
+        if (!values) {
+          container.innerHTML += `<div class="mb-6"><h2 class="font-bold">${flag} ${countryLabel} - ${sheet}</h2><div class="text-red-600">載入題庫失敗，請檢查 Google Sheet。</div></div>`;
+          continue;
+        }
+        // 簡單顯示題庫內容
+        container.innerHTML += `
+          <div class="mb-6">
+            <h2 class="font-bold">${flag} ${countryLabel} - ${sheet}</h2>
+            <table class="w-full border mt-2 text-sm">
+              <tbody>
+                ${values.map(row => `<tr>${row.map(cell => `<td class="border px-2 py-1">${cell}</td>`).join('')}</tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    showQuiz();
+  </script>
 </body>
 </html>
