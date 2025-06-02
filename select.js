@@ -1,16 +1,19 @@
 const SHEET_INDEX = {
-  italy: "https://opensheet.elk.sh/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/italy",
-  france: "https://opensheet.elk.sh/1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU/france",
-  spain: "https://opensheet.elk.sh/1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY/spain"
+  italy: "1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA",
+  france: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU",
+  spain: "1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY"
 };
-
-const container = document.getElementById('region-checkboxes');
 
 async function fetchSheetNames(sheetId) {
   const url = `https://opensheet.vercel.app/${sheetId}`;
   const res = await fetch(url);
+  // 這裡根據 opensheet API 的回傳格式修正
   const sheets = await res.json();
-  return sheets.sheetNames || [];
+  // 檢查 sheets 的資料型態
+  if (Array.isArray(sheets)) {
+    return sheets.map(item => item.sheetName || item.name);
+  }
+  return [];
 }
 
 async function renderRegionUI() {
