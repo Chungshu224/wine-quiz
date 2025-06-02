@@ -17,8 +17,12 @@
 
     <!-- 題庫選擇 -->
     <div class="mb-4">
-      <p class="font-semibold mb-2">📚 請選擇地區（可複選）</p>
-      <div id="region-checkboxes" class="space-y-2"></div>
+      <p class="font-semibold mb-2">📚 請選擇國家（可複選）</p>
+      <div id="region-checkboxes" class="flex gap-4">
+        <label><input type="checkbox" value="italy" checked /> 🇮🇹 義大利</label>
+        <label><input type="checkbox" value="france" checked /> 🇫🇷 法國</label>
+        <label><input type="checkbox" value="spain" checked /> 🇪🇸 西班牙</label>
+      </div>
     </div>
 
     <!-- 題目區域 -->
@@ -41,6 +45,7 @@
       <button id="restart-button" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">重新作答</button>
     </div>
 
+    <!-- 排行榜 -->
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-2">🏆 排行榜</h2>
       <ul id="leaderboard" class="list-disc pl-5 text-gray-700 text-sm"></ul>
