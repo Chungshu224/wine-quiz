@@ -45,7 +45,7 @@ function setupRegionCheckboxes() {
       const regionKey = `${country}_${regionName.replace(/\s+/g, '_')}`;
       checkbox.type = 'checkbox';
       checkbox.value = regionKey;
-      checkbox.checked = true;
+      checkbox.checked = false;
       regionURLMap[regionKey] = url;
       label.appendChild(checkbox);
       label.appendChild(document.createTextNode(regionName));
