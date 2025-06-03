@@ -50,19 +50,36 @@
       } catch (e) { debug("資料抓取失敗：" + e.message); return null; }
     }
 
-    // 轉換題庫資料（欄位順序：產區名稱,葡萄品種,風味,等級,正確答案,選項A,選項B,選項C,選項D）
+    // 轉換題庫資料（欄位順序：國家,產區,法定等級,法定產區,葡萄酒類型,主要品種）
     function convertSheetToQuestions(values) {
       if (!values || values.length < 2) return [];
       const [header, ...rows] = values;
       return rows.map(row => ({
-        clue: {
-          grape: row[1],
-          flavor: row[2],
-          level: row[3]
-        },
-        answer: row[4],
-        options: [row[5], row[6], row[7], row[8]]
+        country: row[0],
+        area: row[1],
+        level: row[2],
+        answer: row[3], // 法定產區
+        type: row[4],
+        grape: row[5]
       }));
+    }
+
+    // 抽取干擾選項
+    function getShuffledOptions(correct, pool, n=4) {
+      const options = [correct];
+      // pool: 所有可能的法定產區（去除正解後隨機抽 n-1 個）
+      const distractors = pool.filter(opt => opt !== correct);
+      for (let i = distractors.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [distractors[i], distractors[j]] = [distractors[j], distractors[i]];
+      }
+      options.push(...distractors.slice(0, n-1));
+      // 最後再洗牌
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      return options;
     }
 
     function shuffle(arr) {
@@ -119,6 +136,9 @@
       shuffle(allQuestions);
       const quizQuestions = allQuestions.slice(0, QUIZ_COUNT);
 
+      // 取得全部法定產區選項
+      const allAnswers = Array.from(new Set(allQuestions.map(q => q.answer)));
+
       // 3. 顯示題目
       let score = 0;
       let idx = 0;
@@ -152,16 +172,17 @@
           showLeaderboard();
           return;
         }
+        // 選項
+        const options = getShuffledOptions(q.answer, allAnswers, 4);
         // 題目內容
         document.getElementById('quiz-content').innerHTML = `
           <div class="mb-4 text-lg font-bold">第 ${qIdx+1} 題 / ${QUIZ_COUNT}</div>
-          <div class="mb-4">
-            <span class="font-semibold">葡萄品種：</span>${q.clue.grape}　
-            <span class="font-semibold">風味：</span>${q.clue.flavor}　
-            <span class="font-semibold">等級：</span>${q.clue.level}
-          </div>
+          <div class="mb-2"><span class="font-semibold">產區：</span>${q.area}</div>
+          <div class="mb-2"><span class="font-semibold">法定等級：</span>${q.level}</div>
+          <div class="mb-2"><span class="font-semibold">葡萄酒類型：</span>${q.type}</div>
+          <div class="mb-4"><span class="font-semibold">主要品種：</span>${q.grape}</div>
           <div id="options" class="mb-4 flex flex-col gap-2">
-            ${q.options.map((opt, i) => `
+            ${options.map((opt, i) => `
               <button class="px-3 py-2 border rounded hover:bg-blue-100"
                 onclick="window.submitAnswer('${opt}')">
                 ${String.fromCharCode(65 + i)}. ${opt}
