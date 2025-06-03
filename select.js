@@ -1,4 +1,4 @@
-// 儲存各國的 Google Sheet ID 與國旗 emoji
+// 國家與 Google Sheets 設定
 const SHEET_INDEX = {
   italy: {
     id: "1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA",
@@ -16,8 +16,6 @@ const SHEET_INDEX = {
     flag: "🇪🇸"
   }
 };
-
-// 你的 Google Sheets API 金鑰
 const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
 
 /**
@@ -36,111 +34,66 @@ async function fetchSheetNames(sheetId) {
     }
     return data.sheets.map(s => s.properties.title);
   } catch (error) {
-    console.error('取得分頁名稱時發生錯誤:', error, url);
-    alert('載入資料時發生錯誤，請確認 Google Sheet 權限與 API Key 是否有效。\n\n錯誤訊息：' + error.message);
+    alert('載入資料時發生錯誤，請確認 Google Sheet 權限與 API Key 是否有效。\n錯誤訊息：' + error.message);
     return [];
   }
 }
 
 /**
- * 建立國家標題按鈕
+ * 建立產區勾選區塊
  */
-function createHeader(country, flag, label, sheetCount, body) {
-  const header = document.createElement('button');
-  header.type = 'button';
-  header.innerHTML = `<span class="mr-2">${flag}</span>${label}（${sheetCount} 產區）`;
-  header.className = 'w-full text-left px-4 py-2 bg-gray-200 font-semibold';
-  header.setAttribute('aria-expanded', 'false');
-  header.onclick = () => {
-    body.classList.toggle('hidden');
-    header.setAttribute('aria-expanded', body.classList.contains('hidden') ? 'false' : 'true');
-  };
-  return header;
-}
+function createRegionSection(countryKey, countryData, sheets) {
+  const section = document.createElement('div');
+  section.className = 'border rounded mb-4 bg-gray-50';
 
-/**
- * 建立「全選/取消全選」控制按鈕
- */
-function createControlButton(body) {
-  const control = document.createElement('button');
-  control.type = 'button';
-  control.className = 'text-blue-600 text-sm ml-4 mb-2';
-  control.textContent = '全選';
-  control.onclick = () => {
-    const checkboxes = body.querySelectorAll('input[type="checkbox"]');
-    const allChecked = [...checkboxes].every(cb => cb.checked);
-    checkboxes.forEach(cb => (cb.checked = !allChecked));
-    control.textContent = allChecked ? '全選' : '取消全選';
-  };
-  return control;
-}
+  // 國家標題
+  const header = document.createElement('div');
+  header.className = 'px-4 py-2 bg-gray-200 font-semibold flex items-center';
+  header.innerHTML = `<span class="mr-2">${countryData.flag}</span>${countryData.label} <span class="ml-2 text-sm text-gray-500">（${sheets.length} 產區）</span>`;
+  section.appendChild(header);
 
-/**
- * 建立產區勾選區塊（預設全部不選）
- */
-function createRegionBody(country, sheets) {
+  // 勾選區
   const body = document.createElement('div');
-  body.className = 'grid grid-cols-2 gap-2 p-4 hidden';
+  body.className = 'grid grid-cols-2 gap-2 p-4';
   sheets.forEach(sheetName => {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.value = `${country}__${sheetName}`;
-    checkbox.checked = false; // 預設全部不勾選
-    checkbox.id = `cb_${country}_${sheetName}`;
+    checkbox.value = `${countryKey}__${sheetName}`;
+    checkbox.checked = false;
+    checkbox.id = `cb_${countryKey}_${sheetName}`;
     checkbox.setAttribute('aria-label', sheetName);
 
     const label = document.createElement('label');
-    label.className = 'flex items-center gap-1';
+    label.className = 'flex items-center gap-2';
     label.appendChild(checkbox);
     label.appendChild(document.createTextNode(sheetName));
     body.appendChild(label);
   });
-  return body;
+  section.appendChild(body);
+
+  return section;
 }
 
 /**
- * 建立「取消全部選擇」按鈕
- */
-function createUncheckAllButton() {
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'bg-red-100 text-red-700 px-3 py-1 rounded mb-4 mr-4';
-  btn.textContent = '取消全部選擇';
-  btn.onclick = () => {
-    document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
-  };
-  return btn;
-}
-
-/**
- * 渲染所有國家與產區的 UI
+ * 渲染所有國家與產區的 UI（全部展開）
  */
 async function renderRegionUI() {
   const container = document.getElementById('region-checkboxes');
-  if (!container) {
-    console.error('找不到 region-checkboxes 區塊');
-    return;
-  }
-  container.innerHTML = ''; // 清空現有內容
-
-  // 先加上「取消全部選擇」按鈕
-  const uncheckAllBtn = createUncheckAllButton();
-  container.appendChild(uncheckAllBtn);
+  if (!container) return;
+  container.innerHTML = '';
 
   for (const [countryKey, countryData] of Object.entries(SHEET_INDEX)) {
     const sheets = await fetchSheetNames(countryData.id);
-    const section = document.createElement('div');
-    section.className = 'border rounded mb-4';
-
-    const body = createRegionBody(countryKey, sheets);
-    const header = createHeader(countryKey, countryData.flag, countryData.label, sheets.length, body);
-    const control = createControlButton(body);
-
-    section.appendChild(header);
-    section.appendChild(control);
-    section.appendChild(body);
+    const section = createRegionSection(countryKey, countryData, sheets);
     container.appendChild(section);
   }
+}
+
+/**
+ * 全部選擇/全部取消
+ */
+function checkAll(checked) {
+  document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = checked);
 }
 
 /**
@@ -158,4 +111,6 @@ function handleStartButtonClick() {
 
 // 綁定事件與初始化畫面
 document.getElementById('start-button').onclick = handleStartButtonClick;
+document.getElementById('uncheck-all').onclick = () => checkAll(false);
+document.getElementById('check-all').onclick = () => checkAll(true);
 renderRegionUI();
