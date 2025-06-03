@@ -2,122 +2,114 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>葡萄酒題庫作答</title>
+  <title>葡萄酒題庫遊戲</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
   <main class="max-w-3xl w-full bg-white p-6 rounded-xl shadow-lg">
     <header>
-      <h1 class="text-2xl font-bold mb-4 flex items-center gap-2" tabindex="0">
-        <span role="img" aria-label="問答">🍷</span>
-        葡萄酒題庫作答
-      </h1>
+      <h1 class="text-2xl font-bold mb-4">葡萄酒題庫遊戲</h1>
     </header>
-    <div id="debug-info" class="text-sm text-red-600 mb-4"></div>
-    <section id="quiz-content" aria-label="題目區"></section>
+    <div id="debug-info" class="text-red-600 mb-4"></div>
+    <section id="quiz-content"></section>
     <noscript>
       <p class="text-red-600 mt-4">請啟用 JavaScript 以使用此功能。</p>
     </noscript>
   </main>
   <script>
-    // 設定資料
+    // 基本設定
     const SHEET_INDEX = {
-      italy: {
-        id: "1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA",
-        label: "義大利",
-        flag: "🇮🇹"
-      },
-      france: {
-        id: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU",
-        label: "法國",
-        flag: "🇫🇷"
-      },
-      spain: {
-        id: "1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY",
-        label: "西班牙",
-        flag: "🇪🇸"
-      }
+      italy: { id: "1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA", label: "義大利", flag: "🇮🇹" },
+      france: { id: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU", label: "法國", flag: "🇫🇷" },
+      spain: { id: "1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY", label: "西班牙", flag: "🇪🇸" }
     };
     const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
-    const debug = (msg) => {
-      document.getElementById('debug-info').innerText = msg;
-      console.warn(msg);
-    };
 
-    // 取得使用者選擇
+    const debug = (msg) => { document.getElementById('debug-info').innerText = msg; };
+
+    // 取得選擇
     let selected = [];
-    try {
-      selected = JSON.parse(localStorage.getItem('selectedRegions')) || [];
-    } catch (e) {
-      debug("偵錯：無法取得選擇資訊，請回到上一頁重新選擇。");
-    }
+    try { selected = JSON.parse(localStorage.getItem('selectedRegions')) || []; } catch (e) {}
+    if (!selected.length) { debug("請回到上一頁選擇產區！"); }
 
-    if (!selected.length) {
-      debug("偵錯：沒有選擇任何產區，請回到上一頁勾選。");
-    }
-
-    // 解析選擇
     function parseSelection(str) {
-      // 格式：italy__義大利北部
       const [country, sheet] = str.split('__');
       return {country, sheet};
     }
 
-    // 取得 Google Sheet 題庫
     async function fetchSheetData(sheetId, sheetName) {
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}?key=${API_KEY}`;
       try {
         const res = await fetch(url);
-        if (!res.ok) {
-          debug(`偵錯：API 請求失敗，狀態碼 ${res.status}。請檢查 Google Sheet 權限與 API Key。`);
-          return null;
-        }
+        if (!res.ok) { debug(`API 請求失敗 (${res.status})。`); return null; }
         const data = await res.json();
         return data.values;
-      } catch (e) {
-        debug("偵錯：資料抓取失敗，詳細：" + e.message);
-        return null;
-      }
+      } catch (e) { debug("資料抓取失敗：" + e.message); return null; }
     }
 
-    // 顯示題庫資料
-    async function showQuiz() {
-      const container = document.getElementById('quiz-content');
-      container.innerHTML = '';
-      if (!selected.length) {
-        container.innerHTML = '<p class="text-red-600">沒有選擇產區，請回到上一頁。</p>';
+    // 轉換題庫資料（假設第一列是標題，之後每筆是 [題目, A, B, C, D, 答案]）
+    function convertSheetToQuestions(values) {
+      if (!values || values.length < 2) return [];
+      const [header, ...rows] = values;
+      return rows.map(row => ({
+        q: row[0],
+        options: row.slice(1, 5),
+        answer: row[5]
+      }));
+    }
+
+    // 顯示單題
+    function showQuestion(qs, idx, score) {
+      const q = qs[idx];
+      if (!q) {
+        document.getElementById('quiz-content').innerHTML =
+          `<div class="text-lg mb-4 text-green-700">遊戲結束！你的分數：${score} / ${qs.length}</div>
+           <button onclick="location.href='select.html'" class="px-4 py-2 bg-blue-500 text-white rounded">再玩一次</button>`;
         return;
       }
+      document.getElementById('quiz-content').innerHTML = `
+        <div class="mb-4 text-lg font-bold">${idx + 1}. ${q.q}</div>
+        <div id="options" class="mb-4 flex flex-col gap-2">
+          ${q.options.map((opt, i) => `
+            <button class="px-3 py-2 border rounded hover:bg-blue-100"
+              onclick="window.submitAnswer('${String.fromCharCode(65 + i)}')">
+              ${String.fromCharCode(65 + i)}. ${opt}
+            </button>
+          `).join('')}
+        </div>
+        <div id="feedback" class="mb-2"></div>
+        <div class="text-right text-gray-500">第 ${idx + 1} / ${qs.length} 題</div>
+      `;
+      window.submitAnswer = (ans) => {
+        const isCorrect = ans === q.answer;
+        document.getElementById('feedback').innerHTML =
+          isCorrect ? '<span class="text-green-600">✔️ 答對了！</span>' : `<span class="text-red-600">❌ 答錯，正確答案是 ${q.answer}</span>`;
+        setTimeout(() => showQuestion(qs, idx + 1, score + (isCorrect ? 1 : 0)), 1000);
+      };
+    }
+
+    // 主流程
+    (async function(){
+      // 1. 抓全部題庫合併
+      let allQuestions = [];
       for (const region of selected) {
         const {country, sheet} = parseSelection(region);
         const sheetId = SHEET_INDEX[country]?.id;
-        const countryLabel = SHEET_INDEX[country]?.label || country;
-        const flag = SHEET_INDEX[country]?.flag || '';
-        if (!sheetId) {
-          debug(`偵錯：找不到 ${country} 的 Sheet ID`);
-          continue;
-        }
+        if (!sheetId) continue;
         const values = await fetchSheetData(sheetId, sheet);
-        if (!values) {
-          container.innerHTML += `<div class="mb-6"><h2 class="font-bold">${flag} ${countryLabel} - ${sheet}</h2><div class="text-red-600">載入題庫失敗，請檢查 Google Sheet。</div></div>`;
-          continue;
-        }
-        // 簡單顯示題庫內容
-        container.innerHTML += `
-          <div class="mb-6">
-            <h2 class="font-bold">${flag} ${countryLabel} - ${sheet}</h2>
-            <table class="w-full border mt-2 text-sm">
-              <tbody>
-                ${values.map(row => `<tr>${row.map(cell => `<td class="border px-2 py-1">${cell}</td>`).join('')}</tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
+        allQuestions = allQuestions.concat(convertSheetToQuestions(values));
       }
-    }
+      if (!allQuestions.length) { debug("題庫為空或抓取失敗！"); return; }
+      // 2. 隨機排序
+      for (let i = allQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+      }
+      // 3. 顯示第一題
+      showQuestion(allQuestions, 0, 0);
+    })();
 
-    showQuiz();
   </script>
 </body>
 </html>
