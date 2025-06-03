@@ -16,9 +16,23 @@
       </h1>
     </header>
     <section id="region-checkboxes" class="space-y-4" aria-label="地區勾選區塊" tabindex="0">
-      <!-- select.js 會自動載入產區選項 -->
+      <!-- select.js 會自動載入產區選項（全部展開） -->
     </section>
-    <div class="text-center mt-6">
+    <div class="flex flex-wrap gap-3 mt-6">
+      <button
+        id="uncheck-all"
+        class="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300"
+        aria-label="取消全部選擇"
+      >
+        取消全部選擇
+      </button>
+      <button
+        id="check-all"
+        class="bg-blue-100 text-blue-700 px-4 py-2 rounded hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300"
+        aria-label="全部選擇"
+      >
+        全部選擇
+      </button>
       <button
         id="start-button"
         class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-300"
@@ -27,7 +41,7 @@
         開始作答
       </button>
     </div>
-       <noscript>
+    <noscript>
       <p class="text-red-600 mt-4">請啟用 JavaScript 以使用此功能。</p>
     </noscript>
   </main>
