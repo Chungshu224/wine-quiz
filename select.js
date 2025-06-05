@@ -15,6 +15,35 @@ const SHEET_INDEX = {
     label: "西班牙",
     flag: "🇪🇸"
   }
+  Germany: {
+    id: "1M0yjlT-bXXFhrV-snoGEPw6WhyMSwSEf4O6f7K_zo9o",
+    label: "德國",
+    flag: GR"
+   }
+  USA: {
+    id: "1ZsGBl0jHPhQu9nV3k5rJhJ4ZXkkrwSvA6qhY0RaTRxE",
+    label: "美國",
+    flag: "🇪🇸"
+     }
+  Hungary: {
+    id: "1Rcf_mH4p1F05MhitSEkcjMaIU2mKmiXi77ifbOjfC14",
+    label: "匈牙利",
+    flag: "HU"
+     }
+  New Zealand: {
+    id: "1O6TqxxB0YSitH9ySe3pncEx_Zl_kVtcJd2zslBDKw5Y",
+    label: "紐西蘭",
+    flag: "NZ"
+     }
+  Austria: {
+    id: "1qaxLc9-GMyHgPJCajU0Cs0-vrI4nRFsqn1Y3nvj_-m8",
+    label: "奧地利",
+    flag: "AUS"
+     }
+  Portugal: {
+    id: "18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4",
+    label: "葡萄牙",
+    flag: "PT"
 };
 const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
 
