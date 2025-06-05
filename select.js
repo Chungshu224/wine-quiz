@@ -66,7 +66,7 @@ async function fetchSheetNames(sheetId) {
   } catch (error) {
     alert('載入資料時發生錯誤，請確認 Google Sheet 權限與 API Key 是否有效。\n錯誤訊息：' + error.message);
     return [];
-   
+   }
 /**
  * 建立產區勾選區塊
  */
