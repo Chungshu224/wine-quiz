@@ -1,4 +1,4 @@
-// 題庫來源：一國一檔
+ 題庫來源：一國一檔
 const SHEET_MAP = {
   italy: "https://opensheet.elk.sh/1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA/italy",
   portugal: "https://opensheet.elk.sh/18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4/portugal",
@@ -26,7 +26,7 @@ document.getElementById('start-button').onclick = async () => {
 
   const urls = selectedRegions.map(region => SHEET_MAP[region]);
   const results = await Promise.all(urls.map(url => fetch(url).then(r => r.json())));
-  data = results.flat().filter(entry => entry['法定產區']);
+  data = results.flat().filter(entry => entry['appellation']);
   startQuiz();
 };
 
@@ -41,15 +41,15 @@ function startQuiz() {
 
 function showQuestion() {
   const q = quizData[currentQuestion];
-  const options = [q['法定產區']];
+  const options = [q['appellation']];
   while (options.length < 4) {
-    const candidate = data[Math.floor(Math.random() * data.length)]['法定產區'];
+    const candidate = data[Math.floor(Math.random() * data.length)]['appellation'];
     if (candidate && !options.includes(candidate)) options.push(candidate);
   }
   options.sort(() => 0.5 - Math.random());
 
   document.getElementById('question').textContent =
-    `這是款 ${q['法定等級']}，主要使用 ${q['主要品種']} 釀製，可以是 ${q['風味特徵']}，請問來自哪個法定產區？`;
+    `這是款 ${q['Classification']}，主要使用 ${q['Grape 1']} 釀製，可以是 ${q['Flavor Notes']}，請問來自哪個法定產區？`;
   document.getElementById('question-progress').textContent =
     `第 ${currentQuestion + 1} / ${quizData.length} 題`;
 
@@ -61,7 +61,7 @@ function showQuestion() {
     btn.className = 'w-full text-left bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded';
     btn.onclick = () => {
       Array.from(optionsDiv.children).forEach(b => b.disabled = true);
-      selectAnswer(opt === q['法定產區'], q['法定產區']);
+      selectAnswer(opt === q['Region'], q['Region']);
     };
     optionsDiv.appendChild(btn);
   });
