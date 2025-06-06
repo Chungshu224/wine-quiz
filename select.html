@@ -18,7 +18,19 @@
     <section id="region-checkboxes" class="space-y-4" aria-label="地區勾選區塊" tabindex="0">
       <!-- select.js 會自動載入產區選項（全部展開） -->
     </section>
-    <div class="flex flex-wrap gap-3 mt-6">
+<div class="mb-4 p-4 bg-white rounded shadow">
+  <label class="font-semibold block mb-2">選擇難易度：</label>
+  <label class="inline-flex items-center mr-6">
+    <input type="radio" name="difficulty" value="easy" checked class="mr-2" />
+    容易（提供完整資訊）
+  </label>
+  <label class="inline-flex items-center">
+    <input type="radio" name="difficulty" value="hard" class="mr-2" />
+    困難（僅提供類型與主葡萄品種）
+  </label>
+</div>
+  
+  <div class="flex flex-wrap gap-3 mt-6">
       <button
         id="uncheck-all"
         class="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300"
