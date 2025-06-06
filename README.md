@@ -17,10 +17,17 @@
 | 🔄 返回選擇頁 | 可隨時返回重新選擇題庫與難度設定 |
 
 ## 🗂 題庫來源
-
-- 🇮🇹 Italy：Veneto, Piedmont, Campania, Alto_Adige, Lambardy, Puglia  
-- 🇫🇷 France：Loire, Bordeaux  
-- 🇪🇸 Spain：Green_Spain  
+| 國家       | 包含產區                                                 |
+| -------- | ---------------------------------------------------- |
+| 🇫🇷 法國  | Loire、Bordeaux                                       |
+| 🇮🇹 義大利 | Veneto、Piedmont、Campania、Alto Adige、Lombardy、Puglia  |
+| 🇪🇸 西班牙 | Green Spain                                          |
+| 🇩🇪 德國  | Mosel、Rheingau、Pfalz、Nahe、Franken                    |
+| 🇺🇸 美國  | Napa Valley、Sonoma、Willamette Valley、Columbia Valley |
+| 🇦🇹 奧地利 | Wachau、Kamptal、Kremstal                              |
+| 🇵🇹 葡萄牙 | Douro、Vinho Verde、Dão                                |
+| 🇭🇺 匈牙利 | Tokaj、Eger                                           |
+| 🇳🇿 紐西蘭 | Marlborough、Central Otago、Hawke’s Bay                |
 
 ## 🛠 技術使用
 
