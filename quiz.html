@@ -138,12 +138,59 @@ function checkAnswer(selected, correct) {
 }
 
 function showResult() {
-  const container = document.getElementById("quiz");
-  container.innerHTML = `
-    <div class="text-xl font-bold mb-4">測驗完成！</div>
-    <div class="mb-4">你的得分是 ${score} / ${allQuestions.length}</div>
-    <button onclick="location.href='index.html'" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">重新選擇題庫</button>
+  const quizDiv = document.getElementById("quiz");
+  const totalTime = Math.round((Date.now() - startTime) / 1000); // 秒
+  const totalQ = questions.length;
+
+  quizDiv.innerHTML = `
+    <div class="text-xl font-bold mb-4">🎉 測驗完成！</div>
+    <div class="mb-2">得分：${score} / ${totalQ}</div>
+    <div class="mb-4">耗時：${totalTime} 秒　｜　難度：${difficulty}</div>
+    <input id="player-name" type="text" placeholder="輸入暱稱儲存成績"
+           class="border px-3 py-1 rounded w-full mb-4" />
+    <button id="save-btn" class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-6">儲存到排行榜</button>
+    <h3 class="font-semibold mb-2">🏆 排行榜（前 10 名）</h3>
+    <ol id="board" class="list-decimal list-inside mb-6"></ol>
+    <button onclick="toSelectPage()" class="w-full py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+      重新選擇題庫
+    </button>
   `;
+
+  document.getElementById("save-btn").onclick = () =>
+    saveLeaderboard(totalQ, totalTime);
+
+  renderBoard();
+}
+
+function saveLeaderboard(totalQ, totalTime) {
+  const name = document.getElementById("player-name").value.trim() || "玩家";
+  const record = {
+    name,
+    score,
+    totalQ,
+    time: totalTime,
+    difficulty,
+    date: new Date().toLocaleString()
+  };
+
+  const board = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+  board.push(record);
+  board.sort((a, b) => b.score - a.score || a.time - b.time);
+  localStorage.setItem("leaderboard", JSON.stringify(board.slice(0, 10)));
+  renderBoard();
+  document.getElementById("player-name").value = "";
+}
+
+function renderBoard() {
+  const list = document.getElementById("board");
+  if (!list) return;
+  const board = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+  list.innerHTML = board
+    .map(
+      (r, i) =>
+        `<li>${r.name} - ${r.score}/${r.totalQ} 分 - ${r.time}s - ${r.difficulty.toUpperCase()} - ${r.date}</li>`
+    )
+    .join("");
 }
 
 function shuffleArray(arr) {
