@@ -18,6 +18,151 @@
       <p class="text-red-600 mt-4">請啟用 JavaScript 以使用此功能。</p>
     </noscript>
   </main>
-  <script src="quiz.js" defer></script>
+  <script src="quiz.js" defer>
+    <script>
+const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
+
+const SHEET_INDEX = {
+  italy: { id: "1WLrMMYTPRjIxiWueFA1J3rfKzC34xbqver5tqCzP94s" },
+  france: { id: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU" },
+  spain: { id: "1EeU1B3AF64S12XOIj9fLi-86_aMNcbmuEdKSBhsCpC4" },
+  germany: { id: "1M0yjlT-bXXFhrV-snoGEPw6WhyMSwSEf4O6f7K_zo9o" },
+  usa: { id: "1ZsGBl0jHPhQu9nV3k5rJhJ4ZXkkrwSvA6qhY0RaTRxE" },
+  hungary: { id: "1Rcf_mH4p1F05MhitSEkcjMaIU2mKmiXi77ifbOjfC14" },
+  new_zealand: { id: "1O6TqxxB0YSitH9ySe3pncEx_Zl_kVtcJd2zslBDKw5Y" },
+  austria: { id: "1qaxLc9-GMyHgPJCajU0Cs0-vrI4nRFsqn1Y3nvj_-m8" },
+  portugal: { id: "18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4" }
+};
+
+let allQuestions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let difficulty = "easy"; // default
+
+async function loadQuizData() {
+  const selected = JSON.parse(localStorage.getItem("selectedRegions") || "[]");
+  difficulty = localStorage.getItem("difficulty") || "easy";
+
+  const fetches = selected.map(async key => {
+    const [countryKey, sheetName] = key.split("__");
+    const sheetId = SHEET_INDEX[countryKey].id;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const rows = data.values;
+    const headers = rows[0];
+    return rows.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = row[i] || "");
+      return obj;
+    });
+  });
+
+  const results = await Promise.all(fetches);
+  allQuestions = results.flat();
+  shuffleArray(allQuestions);
+  startQuiz();
+}
+
+function startQuiz() {
+  currentQuestionIndex = 0;
+  score = 0;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = allQuestions[currentQuestionIndex];
+  const container = document.getElementById("question-container");
+  const optionsContainer = document.getElementById("options-container");
+
+  let questionText = "";
+
+  if (difficulty === "easy") {
+    questionText = `
+      這是款來自【${q.Country}】的${q.Classification || "酒款"}<br/>
+      類型：${q.Wine_type} / ${q.Sub_type}<br/>
+      主要葡萄品種：${q.Grape_1}（${q.Grape_1_color}）<br/>
+      是否混釀：${q.Is_blend === "yes" ? "是" : "否"}<br/>
+      次葡萄：${q.Grape_2 || "無"}（${q.Grape_2_color || "無"}）<br/>
+      次產區：${q.Sub_region || "無"}<br/>
+      <br/>請問這是哪個法定產區？
+    `;
+  } else {
+    questionText = `
+      這是款【${q.Wine_type}】，<br/>
+      主要使用【${q.Grape_1}】釀製，<br/>
+      請問法定產區是哪個？
+    `;
+  }
+
+  container.innerHTML = `
+    <div class="mb-2 text-sm text-gray-600">第 ${currentQuestionIndex + 1} 題 / 共 ${allQuestions.length} 題</div>
+    <div class="text-lg font-medium mb-4">${questionText}</div>
+  `;
+
+  // 題目選項：隨機挑選 4 個產區（含正確答案）
+  const correct = q.Region;
+  const options = [correct];
+
+  while (options.length < 4) {
+    const rand = allQuestions[Math.floor(Math.random() * allQuestions.length)].Region;
+    if (!options.includes(rand)) options.push(rand);
+  }
+
+  shuffleArray(options);
+
+  optionsContainer.innerHTML = "";
+  options.forEach(option => {
+    const btn = document.createElement("button");
+    btn.textContent = option;
+    btn.className = "block w-full text-left px-4 py-2 mb-2 bg-white border rounded hover:bg-blue-100";
+    btn.onclick = () => checkAnswer(option, correct);
+    optionsContainer.appendChild(btn);
+  });
+}
+
+function checkAnswer(selected, correct) {
+  const feedback = document.getElementById("feedback");
+  if (selected === correct) {
+    score++;
+    feedback.textContent = "答對了！";
+    feedback.className = "text-green-600 mb-4";
+  } else {
+    feedback.textContent = `答錯了，正確答案是：${correct}`;
+    feedback.className = "text-red-600 mb-4";
+  }
+
+  // 下一題
+  currentQuestionIndex++;
+  if (currentQuestionIndex < allQuestions.length) {
+    setTimeout(() => {
+      feedback.textContent = "";
+      renderQuestion();
+    }, 1000);
+  } else {
+    setTimeout(showResult, 1000);
+  }
+}
+
+function showResult() {
+  const container = document.getElementById("quiz");
+  container.innerHTML = `
+    <div class="text-xl font-bold mb-4">測驗完成！</div>
+    <div class="mb-4">你的得分是 ${score} / ${allQuestions.length}</div>
+    <button onclick="location.href='index.html'" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">重新選擇題庫</button>
+  `;
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+window.onload = loadQuizData;
+</script>
+
+  </script>
 </body>
 </html>
