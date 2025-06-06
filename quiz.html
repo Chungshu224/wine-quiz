@@ -7,25 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
-<div id="quiz" class="max-w-xl mx-auto mt-10 p-4 bg-gray-50 rounded shadow">
-  <div id="question-container" class="mb-4"></div>
-  <div id="options-container" class="mb-4"></div>
-  <div id="feedback" class="text-lg"></div>
-</div>
-
-  <main class="max-w-3xl w-full bg-white p-6 rounded-xl shadow-lg">
-    <header>
-      <h1 class="text-2xl font-bold mb-4">葡萄酒法定產區推測遊戲</h1>
-    </header>
-    <div id="debug-info" class="text-red-600 mb-4"></div>
-    <section id="quiz-content"></section>
-    <section id="leaderboard" class="mt-8"></section>
-    <noscript>
-      <p class="text-red-600 mt-4">請啟用 JavaScript 以使用此功能。</p>
-    </noscript>
-  </main>
-  <script src="quiz.js" defer>
-    <script>
+  <div id="quiz" class="max-w-xl mx-auto mt-10 p-4 bg-gray-50 rounded shadow">
+    <div id="question-container" class="mb-4"></div>
+    <div id="options-container" class="mb-4"></div>
+    <div id="feedback" class="text-lg"></div>
+  </div>
+ <script>
 const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
 
 const SHEET_INDEX = {
@@ -168,7 +155,5 @@ function shuffleArray(arr) {
 
 window.onload = loadQuizData;
 </script>
-
-  </script>
 </body>
 </html>
