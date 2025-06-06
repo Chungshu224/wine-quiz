@@ -1,7 +1,7 @@
 // 國家與 Google Sheets 設定
 const SHEET_INDEX = {
   italy: {
-    id: "1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA",
+    id: "1WLrMMYTPRjIxiWueFA1J3rfKzC34xbqver5tqCzP94s",
     label: "義大利",
     flag: "🇮🇹"
   },
@@ -11,7 +11,7 @@ const SHEET_INDEX = {
     flag: "🇫🇷"
   },
   spain: {
-    id: "1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY",
+    id: "1EeU1B3AF64S12XOIj9fLi-86_aMNcbmuEdKSBhsCpC4",
     label: "西班牙",
     flag: "🇪🇸"
   },
