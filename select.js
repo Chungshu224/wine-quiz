@@ -135,8 +135,16 @@ function handleStartButtonClick() {
     alert('請至少選擇一個產區');
     return;
   }
+
+  // 儲存選擇的產區
   localStorage.setItem('selectedRegions', JSON.stringify(selected));
+
+  // 儲存難度設定
+  const difficulty = document.querySelector('input[name="difficulty"]:checked')?.value || 'easy';
+  localStorage.setItem('difficulty', difficulty);
+
   window.location.href = 'quiz.html';
+
 }
 
 // 綁定事件與初始化畫面
