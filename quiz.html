@@ -6,12 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
-  <div id="quiz" class="max-w-xl mx-auto mt-10 p-4 bg-gray-50 rounded shadow">
-    <div id="question-container" class="mb-4"></div>
-    <div id="options-container" class="mb-4"></div>
+<body class="bg-gray-100">
+  <!-- 返回題庫頁按鈕 -->
+  <div class="max-w-xl mx-auto mt-6 flex justify-end">
+    <button id="btn-back"
+            class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
+      重新選擇題庫
+    </button>
+  </div>
+
+  <!-- 測驗區 -->
+  <div id="quiz" class="max-w-xl mx-auto mt-4 p-6 bg-white rounded shadow">
+    <div id="progress" class="text-sm text-gray-500 mb-2"></div>
+    <div id="question-box" class="mb-4"></div>
+    <div id="options-box" class="mb-4"></div>
     <div id="feedback" class="text-lg"></div>
   </div>
+
+  <!-- 音效 -->
+  <audio id="aud-correct" src="sounds/correct.mp3" preload="auto"></audio>
+  <audio id="aud-wrong"   src="sounds/wrong.mp3"   preload="auto"></audio>
+  <audio id="aud-click"   src="sounds/click.mp3"   preload="auto"></audio>
  <script>
 const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
 
