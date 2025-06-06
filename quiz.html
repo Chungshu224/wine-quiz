@@ -27,7 +27,7 @@
   <audio id="aud-correct" src="sounds/correct.mp3" preload="auto"></audio>
   <audio id="aud-wrong"   src="sounds/wrong.mp3"   preload="auto"></audio>
   <audio id="aud-click"   src="sounds/click.mp3"   preload="auto"></audio>
- <script>
+<script>
 const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
 
 const SHEET_INDEX = {
@@ -45,7 +45,8 @@ const SHEET_INDEX = {
 let allQuestions = [];
 let currentQuestionIndex = 0;
 let score = 0;
-let difficulty = "easy"; // default
+let difficulty = "easy";
+let startTime = 0;
 
 async function loadQuizData() {
   const selected = JSON.parse(localStorage.getItem("selectedRegions") || "[]");
@@ -68,20 +69,21 @@ async function loadQuizData() {
 
   const results = await Promise.all(fetches);
   allQuestions = results.flat();
-  shuffleArray(allQuestions);
+  shuffle(allQuestions);
   startQuiz();
 }
 
 function startQuiz() {
   currentQuestionIndex = 0;
   score = 0;
+  startTime = Date.now();
   renderQuestion();
 }
 
 function renderQuestion() {
   const q = allQuestions[currentQuestionIndex];
-  const container = document.getElementById("question-container");
-  const optionsContainer = document.getElementById("options-container");
+  const container = document.getElementById("question-box");
+  const optionsContainer = document.getElementById("options-box");
 
   let questionText = "";
 
@@ -117,7 +119,7 @@ function renderQuestion() {
     if (!options.includes(rand)) options.push(rand);
   }
 
-  shuffleArray(options);
+  shuffle(options);
 
   optionsContainer.innerHTML = "";
   options.forEach(option => {
@@ -135,9 +137,11 @@ function checkAnswer(selected, correct) {
     score++;
     feedback.textContent = "答對了！";
     feedback.className = "text-green-600 mb-4";
+    playSound("correct");
   } else {
     feedback.textContent = `答錯了，正確答案是：${correct}`;
     feedback.className = "text-red-600 mb-4";
+    playSound("wrong");
   }
 
   // 下一題
@@ -155,7 +159,7 @@ function checkAnswer(selected, correct) {
 function showResult() {
   const quizDiv = document.getElementById("quiz");
   const totalTime = Math.round((Date.now() - startTime) / 1000); // 秒
-  const totalQ = questions.length;
+  const totalQ = allQuestions.length;
 
   quizDiv.innerHTML = `
     <div class="text-xl font-bold mb-4">🎉 測驗完成！</div>
@@ -210,7 +214,7 @@ function renderBoard() {
 
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = (Math.random() * (i + 1)) | 0;
+    const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
@@ -222,8 +226,11 @@ function playSound(type) {
 }
 
 function toSelectPage() {
-  location.href = "select.html"; // 改成你的題庫選擇檔名
+  location.href = "select.html";
 }
+
+document.getElementById("btn-back").onclick = toSelectPage;
+window.onload = loadQuizData;
 </script>
 </body>
 </html>
