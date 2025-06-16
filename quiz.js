@@ -184,7 +184,7 @@ function showLeaderboard() {
       </div>
       <div id="feedback" class="mb-2"></div>
     `;
-    window.submitAnswer = (ans) => {
+    const submitAnswer = (ans) => {
       const isCorrect = ans === q.answer;
       document.getElementById('feedback').innerHTML =
         isCorrect
