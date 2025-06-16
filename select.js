@@ -81,7 +81,13 @@ function createRegionSection(countryKey, countryData, sheets) {
   header.className = 'px-4 py-2 bg-gray-200 font-semibold flex items-center';
   header.innerHTML = `<span class="mr-2">${countryData.flag}</span>${countryData.label} <span class="ml-2 text-sm text-gray-500">（${sheets.length} 產區）</span>`;
   section.appendChild(header);
-
+const countrySelect = document.getElementById("country-select");
+for (const [key, val] of Object.entries(SHEET_INDEX)) {
+  const option = document.createElement("option");
+  option.value = key;
+  option.innerText = `${val.flag} ${val.label}`;
+  countrySelect.appendChild(option);
+}
   // 勾選區
   const body = document.createElement('div');
   body.className = 'grid grid-cols-2 gap-2 p-4';
