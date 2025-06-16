@@ -199,6 +199,5 @@ function showLeaderboard() {
       setTimeout(() => showQuiz(qIdx + 1), 1200);
     };
   }
-
   showQuiz(0);
 })();
