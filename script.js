@@ -77,7 +77,7 @@ function selectAnswer(correct, correctAnswer) {
     feedback.className = 'text-green-600 mt-4 font-semibold';
     correctAnswers++;
   } else {
-    feedback.textContent = `❌ 答錯了！正確答案是：${correctAnswer}`;
+    feedback.textContent = `❌ 答錯了！正確答案是：${q.Answer}`;
     feedback.className = 'text-red-600 mt-4 font-semibold';
   }
   document.getElementById('next-button').classList.remove('hidden');
