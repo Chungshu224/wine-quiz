@@ -9,7 +9,7 @@
 <body class="bg-gray-100">
   <!-- 返回題庫頁按鈕 -->
   <div class="max-w-xl mx-auto mt-6 flex justify-end">
-    <button onclick="location.href='select.html'"
+    <button id="btn-back"
             class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
       重新選擇題庫
     </button>
@@ -87,7 +87,7 @@ function renderQuestion() {
 
   let questionText = "";
 
-  if (difficulty === "easy") {
+   if (difficulty === "easy") {
     questionText = `
       questionText = `
   <div class="mb-2">這是款來自 <b>${q.Country}</b> 的 <b>${q.Classification}</b></div>
