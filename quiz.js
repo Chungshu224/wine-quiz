@@ -13,7 +13,6 @@ const SHEET_INDEX = {
 
 const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
 const QUIZ_COUNT = 10;
-
 const debug = (msg) => { document.getElementById('debug-info').innerText = msg; };
 
 // 取得選擇
@@ -43,21 +42,27 @@ async function fetchSheetData(sheetId, sheetName) {
   }
 }
 
-// 轉換題庫資料
+// 轉換題庫資料，對應你的 Google Sheet 欄位
 function convertSheetToQuestions(values) {
   if (!values || values.length < 2) return [];
   const [header, ...rows] = values;
-  return rows.filter(row => row.length >= 6).map(row => ({
-    country: row[0],
-    area: row[1],
-    level: row[2],
-    answer: row[3],
-    type: row[4],
-    grape: row[5]
+  return rows.filter(row => row.length >= 12 && row[3]).map(row => ({
+    country: row[0],         // A
+    region: row[1],          // B
+    sub_region: row[2],      // C
+    answer: row[3],          // D Appellation (正確答案/選項)
+    classification: row[4],  // E
+    wine_type: row[5],       // F
+    sub_type: row[6],        // G
+    grape_1: row[7],         // H
+    grape_1_color: row[8],   // I
+    grape_2: row[9],         // J
+    grape_2_color: row[10],  // K
+    is_blend: row[11],       // L
   }));
 }
 
-// 抽取干擾選項
+// 產生干擾選項
 function getShuffledOptions(correct, pool, n = 4) {
   const options = [correct];
   const distractors = pool.filter(opt => opt !== correct);
@@ -159,12 +164,16 @@ function showLeaderboard() {
     }
 
     const options = getShuffledOptions(q.answer, allAnswers, 4);
+
     document.getElementById('quiz-content').innerHTML = `
       <div class="mb-4 text-lg font-bold">第 ${qIdx + 1} 題 / ${QUIZ_COUNT}</div>
-      <div class="mb-2"><span class="font-semibold">產區：</span>${q.area}</div>
-      <div class="mb-2"><span class="font-semibold">法定等級：</span>${q.level}</div>
-      <div class="mb-2"><span class="font-semibold">葡萄酒類型：</span>${q.type}</div>
-      <div class="mb-4"><span class="font-semibold">主要品種：</span>${q.grape}</div>
+      <div class="mb-2">這是款來自 <b>${q.country}</b> 的 <b>${q.classification}</b></div>
+      <div class="mb-2">酒的類型是：<b>${q.wine_type}</b>, <b>${q.sub_type}</b></div>
+      <div class="mb-2">主要葡萄品種為：<b>${q.grape_1}</b></div>
+      <div class="mb-2">是否混釀：<b>${q.is_blend}</b></div>
+      <div class="mb-2">次要葡萄品種為：<b>${q.grape_2}</b></div>
+      <div class="mb-2">次產區：<b>${q.sub_region}</b></div>
+      <div class="my-4 font-semibold">請問這是哪個法定產區？</div>
       <div id="options" class="mb-4 flex flex-col gap-2">
         ${options.map((opt, i) => `
           <button class="px-3 py-2 border rounded hover:bg-blue-100"
