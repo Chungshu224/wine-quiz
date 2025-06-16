@@ -28,13 +28,16 @@ function parseSelection(str) {
 
 async function fetchSheetData(sheetId, sheetName) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}?key=${API_KEY}`;
+  debug(`[fetchSheetData] 取得資料: sheetId=${sheetId}, sheetName=${sheetName}`);
   try {
     const res = await fetch(url);
+    debug(`[fetchSheetData] fetch 回應: status=${res.status}`);
     if (!res.ok) {
       debug(`API 請求失敗 (${res.status} ${res.statusText})。`);
       return null;
     }
     const data = await res.json();
+    debug(`[fetchSheetData] 取得資料筆數: ${data.values ? data.values.length : 0}`);
     return data.values;
   } catch (e) {
     debug("資料抓取失敗：" + e.message);
@@ -119,14 +122,22 @@ function showLeaderboard() {
 // 主遊戲邏輯
 (async function () {
   let allQuestions = [];
+  debug(`[主流程] 選擇的產區: ${JSON.stringify(selected)}`);
   for (const region of selected) {
     const { country, sheet } = parseSelection(region);
+    debug(`[主流程] 處理 region: country=${country}, sheet=${sheet}`);
     const sheetId = SHEET_INDEX[country]?.id;
-    if (!sheetId) continue;
+    if (!sheetId) {
+      debug(`[主流程] 找不到 sheetId for country: ${country}`);
+      continue;
+    }
     const values = await fetchSheetData(sheetId, sheet);
+    debug(`[主流程] ${country}/${sheet} 取得資料: ${values ? values.length : 0} 筆`);
     allQuestions = allQuestions.concat(convertSheetToQuestions(values));
+    debug(`[主流程] allQuestions 累計: ${allQuestions.length}`);
   }
   if (!allQuestions.length) { debug("題庫為空或抓取失敗！"); return; }
+
 
   shuffle(allQuestions);
   const quizQuestions = allQuestions.slice(0, QUIZ_COUNT);
