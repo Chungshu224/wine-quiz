@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -8,12 +7,15 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
+  <!-- 返回題庫頁按鈕 -->
   <div class="max-w-xl mx-auto mt-6 flex justify-end">
-    <button id="btn-back" class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
+    <button id="btn-back"
+            class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
       重新選擇題庫
     </button>
   </div>
 
+  <!-- 測驗區 -->
   <div id="quiz" class="max-w-xl mx-auto mt-4 p-6 bg-white rounded shadow">
     <div id="progress" class="text-sm text-gray-500 mb-2"></div>
     <div id="question-box" class="mb-4"></div>
@@ -21,10 +23,10 @@
     <div id="feedback" class="text-lg"></div>
   </div>
 
+  <!-- 音效 -->
   <audio id="aud-correct" src="sounds/correct.mp3" preload="auto"></audio>
-  <audio id="aud-wrong" src="sounds/wrong.mp3" preload="auto"></audio>
-  <audio id="aud-click" src="sounds/click.mp3" preload="auto"></audio>
-
+  <audio id="aud-wrong"   src="sounds/wrong.mp3"   preload="auto"></audio>
+  <audio id="aud-click"   src="sounds/click.mp3"   preload="auto"></audio>
 <script>
 const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
 
@@ -87,13 +89,13 @@ function renderQuestion() {
 
   if (difficulty === "easy") {
     questionText = `
-      <div class="mb-2">這是款來自 <b>${q.Country}</b> 的 <b>${q.Classification}</b></div>
-      <div class="mb-2">酒的類型是：<b>${q.Wine_type}</b>, <b>${q.Sub_type}</b></div>
-      <div class="mb-2">主要葡萄品種為：<b>${q.Grape_1}</b></div>
-      <div class="mb-2">是否混釀：<b>${q.Is_blend}</b></div>
-      <div class="mb-2">次要葡萄品種為：<b>${q.Grape_2}</b></div>
-      <div class="mb-2">次產區：<b>${q.Sub_region}</b></div>
-      <div class="my-4 font-semibold">請問這是哪個法定產區？</div>
+      這是款來自【${q.Country}】的${q.Classification || "酒款"}<br/>
+      類型：${q.Wine_type} / ${q.Sub_type}<br/>
+      主要葡萄品種：${q.Grape_1}（${q.Grape_1_color}）<br/>
+      是否混釀：${q.Is_blend === "yes" ? "是" : "否"}<br/>
+      次葡萄：${q.Grape_2 || "無"}（${q.Grape_2_color || "無"}）<br/>
+      次產區：${q.Sub_region || "無"}<br/>
+      <br/>請問這是哪個法定產區？
     `;
   } else {
     questionText = `
@@ -108,6 +110,7 @@ function renderQuestion() {
     <div class="text-lg font-medium mb-4">${questionText}</div>
   `;
 
+  // 題目選項：隨機挑選 4 個產區（含正確答案）
   const correct = q.Region;
   const options = [correct];
 
@@ -141,6 +144,7 @@ function checkAnswer(selected, correct) {
     playSound("wrong");
   }
 
+  // 下一題
   currentQuestionIndex++;
   if (currentQuestionIndex < allQuestions.length) {
     setTimeout(() => {
@@ -154,7 +158,7 @@ function checkAnswer(selected, correct) {
 
 function showResult() {
   const quizDiv = document.getElementById("quiz");
-  const totalTime = Math.round((Date.now() - startTime) / 1000);
+  const totalTime = Math.round((Date.now() - startTime) / 1000); // 秒
   const totalQ = allQuestions.length;
 
   quizDiv.innerHTML = `
@@ -218,9 +222,7 @@ function shuffle(arr) {
 
 function playSound(type) {
   const aud = document.getElementById(`aud-${type}`);
-  if (aud) {
-    aud.play().catch(e => console.warn("音效播放失敗", e));
-  }
+  aud && aud.play();
 }
 
 function toSelectPage() {
