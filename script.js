@@ -1,4 +1,4 @@
-// 題庫來源設定（每國多分頁）
+// === 基本設定 ===
 const SHEET_INDEX = {
   italy: { id: "1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA", label: "義大利", flag: "🇮🇹" },
   portugal: { id: "18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4", label: "葡萄牙", flag: "🇵🇹" },
@@ -10,152 +10,208 @@ const SHEET_INDEX = {
   france: { id: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU", label: "法國", flag: "🇫🇷" },
   spain: { id: "1Zngq4LPi1E7edjopwvr7MS2dCRN1GW2rKuOetHPuhnY", label: "西班牙", flag: "🇪🇸" }
 };
-const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
-const QUIZ_COUNT = 10;
+const SHEET_META_API = "https://sheetdb.io/api/v1/"; // 用以模擬產區分類&子分類資料來源
 
-function parseSelection(str) {
-  const [country, sheet] = str.split('__');
-  return { country, sheet };
+// === 狀態 ===
+let regionMeta = {}; // {country: [{category, regions:[{name, value}], ...}]}
+let selectedRegions = []; // ["country__sheetName", ...]
+let totalRegionCount = 0;
+
+// === DOM ===
+const $regionSection = document.getElementById("region-checkboxes");
+const $selectedCount = document.getElementById("selected-count");
+const $totalCount = document.getElementById("total-count");
+const $regionStatus = document.getElementById("region-status");
+const $regionLoading = document.getElementById("region-loading");
+const $regionEmpty = document.getElementById("region-empty");
+const $startButton = document.getElementById("start-button");
+const $checkAll = document.getElementById("check-all");
+const $uncheckAll = document.getElementById("uncheck-all");
+const $startHint = document.getElementById("start-hint");
+
+// === 載入指示 ===
+function showLoading(show) {
+  $regionLoading.style.display = show ? "" : "none";
 }
+showLoading(true);
 
-async function fetchSheetData(sheetId, sheetName) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}?key=${API_KEY}`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.values;
-}
-
-function convertSheetToQuestions(values) {
-  if (!values || values.length < 2) return [];
-  const [header, ...rows] = values;
-  return rows.filter(row => row.length >= 12 && row[3]).map(row => ({
-    country: row[0], region: row[1], sub_region: row[2],
-    answer: row[3], classification: row[4],
-    wine_type: row[5], sub_type: row[6],
-    grape_1: row[7], grape_1_color: row[8],
-    grape_2: row[9], grape_2_color: row[10],
-    is_blend: row[11],
-  }));
-}
-
-function getShuffledOptions(correct, pool, n = 4) {
-  const options = [correct];
-  const distractors = pool.filter(opt => opt !== correct);
-  for (let i = distractors.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [distractors[i], distractors[j]] = [distractors[j], distractors[i]];
+// === 取得產區分類清單（假設從後端 API）===
+async function fetchRegionMeta() {
+  const meta = {};
+  // 模擬: 取得每國的分頁/產區
+  for (const [country, obj] of Object.entries(SHEET_INDEX)) {
+    // 假設每國有數個分頁(sheetName)，每分頁屬於某分類
+    // 實際應從 API 取，這裡用假資料
+    meta[country] = [
+      {
+        category: "主要產區",
+        regions: [
+          { name: "A區", value: `${country}__A區` },
+          { name: "B區", value: `${country}__B區` }
+        ]
+      },
+      {
+        category: "其他產區",
+        regions: [
+          { name: "C區", value: `${country}__C區` }
+        ]
+      }
+    ];
   }
-  options.push(...distractors.slice(0, n - 1));
-  for (let i = options.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [options[i], options[j]] = [options[j], options[i]];
-  }
-  return options;
+  return meta;
 }
 
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-}
+// === 渲染 Accordion/Checkbox ===
+function renderRegions(meta) {
+  $regionSection.innerHTML = "";
+  let count = 0;
+  // 每國一個 accordion
+  Object.entries(SHEET_INDEX).forEach(([country, info], ci) => {
+    const group = meta[country];
+    if (!group || !group.length) return;
 
-// 取得選擇
-let selected = [];
-try { selected = JSON.parse(localStorage.getItem('selectedRegions')) || []; } catch (e) {}
-if (!selected.length) { alert("請回到上一頁選擇產區！"); throw new Error("未選擇產區"); }
+    // 產生國家 Accordion
+    const accordionId = `accordion-${country}`;
+    const countryBlock = document.createElement("div");
+    countryBlock.className = "border rounded bg-gray-50";
 
-(async function () {
-  let allQuestions = [];
-  for (const region of selected) {
-    const { country, sheet } = parseSelection(region);
-    const sheetId = SHEET_INDEX[country]?.id;
-    if (!sheetId) continue;
-    const values = await fetchSheetData(sheetId, sheet);
-    allQuestions = allQuestions.concat(convertSheetToQuestions(values));
-  }
-  if (!allQuestions.length) { alert("題庫為空或抓取失敗！"); return; }
+    // Accordion 主標題
+    const headerBtn = document.createElement("button");
+    headerBtn.className = "w-full text-left px-4 py-2 font-bold flex items-center gap-2 focus:outline-none";
+    headerBtn.setAttribute("aria-expanded", ci === 0 ? "true" : "false");
+    headerBtn.setAttribute("aria-controls", accordionId);
+    headerBtn.id = `accordion-header-${country}`;
+    headerBtn.innerHTML = `${info.flag} ${info.label}`;
+    headerBtn.tabIndex = 0;
+    headerBtn.onclick = () => {
+      const expanded = headerBtn.getAttribute("aria-expanded") === "true";
+      headerBtn.setAttribute("aria-expanded", !expanded);
+      regionList.style.display = expanded ? "none" : "block";
+    };
 
-  shuffle(allQuestions);
-  const quizQuestions = allQuestions.slice(0, QUIZ_COUNT);
-  const allAnswers = Array.from(new Set(allQuestions.map(q => q.answer)));
+    // Accordion 內容
+    const regionList = document.createElement("div");
+    regionList.id = accordionId;
+    regionList.setAttribute("role", "region");
+    regionList.setAttribute("aria-labelledby", headerBtn.id);
+    regionList.style.display = ci === 0 ? "block" : "none";
+    regionList.className = "px-4 pb-2";
 
-  let score = 0;
-  let qIdx = 0;
+    // 各分類下產區
+    group.forEach(cat => {
+      const catTitle = document.createElement("div");
+      catTitle.className = "font-semibold mt-2";
+      catTitle.textContent = cat.category;
+      regionList.appendChild(catTitle);
 
-  function showQuiz() {
-    const q = quizQuestions[qIdx];
-    if (!q) {
-      document.getElementById('quiz-container').classList.add('hidden');
-      document.getElementById('result').classList.remove('hidden');
-      document.getElementById('score').textContent = `你答對了 ${score} / ${QUIZ_COUNT} 題`;
-      renderLeaderboard();
-      return;
-    }
-    document.getElementById('quiz-container').classList.remove('hidden');
-    document.getElementById('result').classList.add('hidden');
-    document.getElementById('question').innerHTML =
-      `這是款來自 <b>${q.country}</b> 的 <b>${q.classification}</b><br>
-      酒的類型是：<b>${q.wine_type}</b>, <b>${q.sub_type}</b><br>
-      主要葡萄品種為：<b>${q.grape_1}</b><br>
-      是否混釀：<b>${q.is_blend}</b><br>
-      次要葡萄品種為：<b>${q.grape_2}</b><br>
-      次產區：<b>${q.sub_region}</b><br>
-      <br><b>請問這是哪個法定產區？</b>`;
-    document.getElementById('question-progress').textContent = `第 ${qIdx + 1} / ${QUIZ_COUNT} 題`;
+      cat.regions.forEach(region => {
+        count++;
+        const label = document.createElement("label");
+        label.className = "inline-flex items-center mr-4 mt-1";
+        label.setAttribute("role", "checkbox");
+        label.setAttribute("aria-checked", "false");
+        label.tabIndex = 0;
 
-    const options = getShuffledOptions(q.answer, allAnswers, 4);
-    const optionsDiv = document.getElementById('options');
-    optionsDiv.innerHTML = '';
-    options.forEach((opt, i) => {
-      const btn = document.createElement('button');
-      btn.textContent = `${String.fromCharCode(65 + i)}. ${opt}`;
-      btn.className = 'w-full text-left bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded';
-      btn.onclick = () => {
-        Array.from(optionsDiv.children).forEach(b => b.disabled = true);
-        if (opt === q.answer) {
-          score++;
-          document.getElementById('feedback').innerHTML = '✅ 答對了！';
-        } else {
-          document.getElementById('feedback').innerHTML = `❌ 答錯，正確答案是 <b>${q.answer}</b>`;
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = region.value;
+        checkbox.className = "mr-2 region-checkbox";
+        checkbox.setAttribute("aria-label", region.name);
+
+        // 回復選擇
+        if (selectedRegions.includes(region.value)) {
+          checkbox.checked = true;
+          label.setAttribute("aria-checked", "true");
         }
-        setTimeout(() => {
-          qIdx++;
-          document.getElementById('feedback').innerHTML = '';
-          showQuiz();
-        }, 1200);
-      };
-      optionsDiv.appendChild(btn);
+
+        checkbox.onchange = () => {
+          if (checkbox.checked) {
+            if (!selectedRegions.includes(region.value)) selectedRegions.push(region.value);
+            label.setAttribute("aria-checked", "true");
+          } else {
+            selectedRegions = selectedRegions.filter(v => v !== region.value);
+            label.setAttribute("aria-checked", "false");
+          }
+          updateStatus();
+        };
+
+        label.appendChild(checkbox);
+        label.append(region.name);
+        regionList.appendChild(label);
+      });
     });
+
+    countryBlock.appendChild(headerBtn);
+    countryBlock.appendChild(regionList);
+    $regionSection.appendChild(countryBlock);
+  });
+
+  totalRegionCount = count;
+  updateStatus();
+}
+
+function updateStatus() {
+  // 更新已選/總數
+  $selectedCount.textContent = selectedRegions.length;
+  $totalCount.textContent = totalRegionCount;
+  $regionStatus.setAttribute("data-total", totalRegionCount);
+  $regionStatus.setAttribute("data-selected", selectedRegions.length);
+
+  // 按鈕狀態提示
+  if (selectedRegions.length === 0) {
+    $startButton.disabled = true;
+    $startButton.setAttribute("aria-disabled", "true");
+    $startHint.classList.remove("hidden");
+  } else {
+    $startButton.disabled = false;
+    $startButton.setAttribute("aria-disabled", "false");
+    $startHint.classList.add("hidden");
   }
 
-  document.getElementById('restart-button').onclick = () => {
-    score = 0; qIdx = 0; shuffle(allQuestions);
-    showQuiz();
-  };
-
-  document.getElementById('save-score').onclick = () => {
-    const name = document.getElementById('player-name').value.trim() || '匿名';
-    let board = [];
-    try { board = JSON.parse(localStorage.getItem('wine_quiz_leaderboard')) || []; } catch (e) {}
-    board.push({ name, score, date: new Date().toLocaleDateString(), regions: selected });
-    board.sort((a, b) => b.score - a.score || a.date.localeCompare(b.date));
-    localStorage.setItem('wine_quiz_leaderboard', JSON.stringify(board.slice(0, 10)));
-    renderLeaderboard();
-    document.getElementById('player-name').value = '';
-  };
-
-  function renderLeaderboard() {
-    const list = document.getElementById('leaderboard');
-    let board = [];
-    try { board = JSON.parse(localStorage.getItem('wine_quiz_leaderboard')) || []; } catch (e) {}
-    list.innerHTML = '';
-    board.slice(0, 10).forEach(entry => {
-      const li = document.createElement('li');
-      li.textContent = `${entry.name} - ${entry.score} (${entry.date})`;
-      list.appendChild(li);
-    });
+  // 無產區空狀態
+  if (totalRegionCount === 0) {
+    $regionEmpty.classList.remove("hidden");
+  } else {
+    $regionEmpty.classList.add("hidden");
   }
-  showQuiz();
+}
+
+function checkAllRegions(check) {
+  document.querySelectorAll('.region-checkbox').forEach(checkbox => {
+    checkbox.checked = check;
+    const label = checkbox.parentElement;
+    if (check) {
+      if (!selectedRegions.includes(checkbox.value)) selectedRegions.push(checkbox.value);
+      label.setAttribute("aria-checked", "true");
+    } else {
+      selectedRegions = [];
+      label.setAttribute("aria-checked", "false");
+    }
+  });
+  // 移除重複值
+  selectedRegions = [...new Set(selectedRegions)];
+  updateStatus();
+}
+
+// === 事件繫結 ===
+$checkAll.onclick = () => checkAllRegions(true);
+$uncheckAll.onclick = () => checkAllRegions(false);
+$startButton.onclick = () => {
+  if (selectedRegions.length === 0) return;
+  localStorage.setItem('selectedRegions', JSON.stringify(selectedRegions));
+  window.location.href = "quiz.html";
+};
+
+// === 主程式 ===
+(async function () {
+  showLoading(true);
+  // 從 localStorage 恢復已選
+  try { selectedRegions = JSON.parse(localStorage.getItem('selectedRegions')) || []; } catch (e) { selectedRegions = []; }
+
+  // 載入分類產區
+  regionMeta = await fetchRegionMeta();
+
+  showLoading(false);
+
+  renderRegions(regionMeta);
 })();
