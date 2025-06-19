@@ -70,6 +70,21 @@ async function fetchSheetNames(sheetId) {
 }
 
 /**
+ * 初始化國家選單
+ */
+function renderCountrySelect() {
+  const countrySelect = document.getElementById("country-select");
+  if (!countrySelect) return;
+  countrySelect.innerHTML = ""; // 避免重複
+  for (const [key, val] of Object.entries(SHEET_INDEX)) {
+    const option = document.createElement("option");
+    option.value = key;
+    option.innerText = `${val.flag} ${val.label}`;
+    countrySelect.appendChild(option);
+  }
+}
+
+/**
  * 建立產區勾選區塊
  */
 function createRegionSection(countryKey, countryData, sheets) {
@@ -81,13 +96,7 @@ function createRegionSection(countryKey, countryData, sheets) {
   header.className = 'px-4 py-2 bg-gray-200 font-semibold flex items-center';
   header.innerHTML = `<span class="mr-2">${countryData.flag}</span>${countryData.label} <span class="ml-2 text-sm text-gray-500">（${sheets.length} 產區）</span>`;
   section.appendChild(header);
-const countrySelect = document.getElementById("country-select");
-for (const [key, val] of Object.entries(SHEET_INDEX)) {
-  const option = document.createElement("option");
-  option.value = key;
-  option.innerText = `${val.flag} ${val.label}`;
-  countrySelect.appendChild(option);
-}
+
   // 勾選區
   const body = document.createElement('div');
   body.className = 'grid grid-cols-2 gap-2 p-4';
@@ -150,10 +159,10 @@ function handleStartButtonClick() {
   localStorage.setItem('difficulty', difficulty);
 
   window.location.href = 'quiz.html';
-
 }
 
 // 綁定事件與初始化畫面
+renderCountrySelect(); // 初始化國家下拉選單
 document.getElementById('start-button').onclick = handleStartButtonClick;
 document.getElementById('uncheck-all').onclick = () => checkAll(false);
 document.getElementById('check-all').onclick = () => checkAll(true);
