@@ -180,7 +180,7 @@ function updateStartButtonStatus() {
   if (totalCountText) totalCountText.textContent = totalCount;
 }
 
-// 在每次渲染 region UI 後加上監控
+// 作區塊渲染後綁定監控
 async function renderRegionUI() {
   const container = document.getElementById('region-checkboxes');
   if (!container) return;
@@ -192,20 +192,18 @@ async function renderRegionUI() {
     container.appendChild(section);
   }
 
-  // 綁定所有 checkbox 的變更事件
   document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => {
     cb.addEventListener('change', updateStartButtonStatus);
   });
-
-  // 初始化按鈕狀態
   updateStartButtonStatus();
 }
 
-// 在 checkAll/ uncheckAll 時也要更新按鈕與數量
+// 全選/全不選後也要觸發檢查
 function checkAll(checked) {
   document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = checked);
   updateStartButtonStatus();
 }
+
 // 綁定事件與初始化畫面
 renderCountrySelect(); // 初始化國家下拉選單
 document.getElementById('start-button').onclick = handleStartButtonClick;
