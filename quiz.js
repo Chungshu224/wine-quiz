@@ -196,6 +196,7 @@ function showLeaderboard() {
       <div id="feedback" class="mb-2"></div>
     `;
     const submitAnswer = (ans) => {
+      window.submitAnswer = submitAnswer; // <--- 新增這行
       const isCorrect = ans === q.answer;
       document.getElementById('feedback').innerHTML =
         isCorrect
