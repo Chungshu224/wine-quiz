@@ -160,7 +160,52 @@ function handleStartButtonClick() {
 
   window.location.href = 'quiz.html';
 }
+/**
+ * 監控所有 checkbox 狀態，更新開始按鈕及選取數量
+ */
+function updateStartButtonStatus() {
+  const checkboxes = document.querySelectorAll('#region-checkboxes input[type="checkbox"]');
+  const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+  const totalCount = checkboxes.length;
+  const startButton = document.getElementById('start-button');
+  const selectedCountText = document.getElementById('selected-count');
+  const totalCountText = document.getElementById('total-count');
 
+  if (startButton) {
+    startButton.disabled = checkedCount === 0;
+    startButton.setAttribute('aria-disabled', checkedCount === 0 ? 'true' : 'false');
+  }
+
+  if (selectedCountText) selectedCountText.textContent = checkedCount;
+  if (totalCountText) totalCountText.textContent = totalCount;
+}
+
+// 在每次渲染 region UI 後加上監控
+async function renderRegionUI() {
+  const container = document.getElementById('region-checkboxes');
+  if (!container) return;
+  container.innerHTML = '';
+
+  for (const [countryKey, countryData] of Object.entries(SHEET_INDEX)) {
+    const sheets = await fetchSheetNames(countryData.id);
+    const section = createRegionSection(countryKey, countryData, sheets);
+    container.appendChild(section);
+  }
+
+  // 綁定所有 checkbox 的變更事件
+  document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', updateStartButtonStatus);
+  });
+
+  // 初始化按鈕狀態
+  updateStartButtonStatus();
+}
+
+// 在 checkAll/ uncheckAll 時也要更新按鈕與數量
+function checkAll(checked) {
+  document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = checked);
+  updateStartButtonStatus();
+}
 // 綁定事件與初始化畫面
 renderCountrySelect(); // 初始化國家下拉選單
 document.getElementById('start-button').onclick = handleStartButtonClick;
