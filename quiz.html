@@ -77,26 +77,22 @@ function startQuiz() {
   currentQuestionIndex = 0;
   score = 0;
   startTime = Date.now();
-  renderQuestion();
-}
-
-function renderQuestion() {
+ function renderQuestion() {
   const q = allQuestions[currentQuestionIndex];
   const container = document.getElementById("question-box");
   const optionsContainer = document.getElementById("options-box");
 
   let questionText = "";
-if (difficulty === "easy") {
-  questionText = `
-    <div class="mb-2">這是款來自<b>${q.Country}</b> 的 <b>${q.Classification}</b></div>
-    <div class="mb-2">酒的類型是：<b>${q.Wine_type}</b>, <b>${q.Sub_type}</b></div>
-    <div class="mb-2">主要葡萄品種為：<b>${q.Grape_1}</b></div>
-    <div class="mb-2">是否混釀：<b>${q.Is_blend}</b></div>
-    <div class="mb-2">次要葡萄品種為：<b>${q.Grape_2}</b></div>
-    <div class="mb-2">次產區：<b>${q.Sub_region}</b></div>
-    <div class="my-4 font-semibold">請問這是哪個法定產區？</div>
-  `;
-}
+  if (difficulty === "easy") {
+    questionText = `
+      <div class="mb-2">這是款來自<b>${q.Country}</b> 的 <b>${q.Classification}</b></div>
+      <div class="mb-2">酒的類型是：<b>${q.Wine_type}</b>, <b>${q.Sub_type}</b></div>
+      <div class="mb-2">主要葡萄品種為：<b>${q.Grape_1}</b></div>
+      <div class="mb-2">是否混釀：<b>${q.Is_blend}</b></div>
+      <div class="mb-2">次要葡萄品種為：<b>${q.Grape_2}</b></div>
+      <div class="mb-2">次產區：<b>${q.Sub_region}</b></div>
+      <div class="my-4 font-semibold">請問這是哪個法定產區？</div>
+    `;
   } else {
     questionText = `
       這是款【${q.Wine_type}】，<br/>
@@ -104,6 +100,11 @@ if (difficulty === "easy") {
       請問法定產區是哪個？
     `;
   }
+
+  // 你可以在這邊繼續後續 render 邏輯
+  container.innerHTML = questionText;
+  // ... 其他選項處理
+}
 
   container.innerHTML = `
     <div class="mb-2 text-sm text-gray-600">第 ${currentQuestionIndex + 1} 題 / 共 ${allQuestions.length} 題</div>
