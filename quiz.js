@@ -1,6 +1,6 @@
 // 設定（如需增減國家請於此調整）
 const SHEET_INDEX = {
-  italy: { id: "1dFJJuIBfIF5mnzAAG2poQKMKQKTVhEUDHuS1YX9RilA", label: "義大利", flag: "🇮🇹" },
+  italy: { id: "1WLrMMYTPRjIxiWueFA1J3rfKzC34xbqver5tqCzP94s", label: "義大利", flag: "🇮🇹" },
   portugal: { id: "18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4", label: "葡萄牙", flag: "🇵🇹" },
   austria: { id: "1qaxLc9-GMyHgPJCajU0Cs0-vrI4nRFsqn1Y3nvj_-m8", label: "奧地利", flag: "🇦🇹" },
   new_zealand: { id: "1O6TqxxB0YSitH9ySe3pncEx_Zl_kVtcJd2zslBDKw5Y", label: "紐西蘭", flag: "🇳🇿" },
