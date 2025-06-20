@@ -77,10 +77,9 @@ function startQuiz() {
   currentQuestionIndex = 0;
   score = 0;
   startTime = Date.now();
- function renderQuestion() {
+function renderQuestion() {
   const q = allQuestions[currentQuestionIndex];
   const container = document.getElementById("question-box");
-  const optionsContainer = document.getElementById("options-box");
 
   let questionText = "";
   if (difficulty === "easy") {
@@ -101,15 +100,8 @@ function startQuiz() {
     `;
   }
 
-  // 你可以在這邊繼續後續 render 邏輯
   container.innerHTML = questionText;
-  // ... 其他選項處理
 }
-
-  container.innerHTML = `
-    <div class="mb-2 text-sm text-gray-600">第 ${currentQuestionIndex + 1} 題 / 共 ${allQuestions.length} 題</div>
-    <div class="text-lg font-medium mb-4">${questionText}</div>
-  `;
 
   // 題目選項：隨機挑選 4 個產區（含正確答案）
   const correct = q.Region;
