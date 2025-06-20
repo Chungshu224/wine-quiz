@@ -7,6 +7,24 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
+  <div id="quiz-container"></div>
+  <script>
+    // 一定要先宣告 container
+    const container = document.getElementById('quiz-container');
+
+    function startQuiz() {
+      // 現在可以安全使用 container 了
+      container.innerHTML = '<p>Quiz started!</p>';
+    }
+
+    function loadQuizData() {
+      // 這裡也可以用 container
+      container.innerHTML = '<p>Loading...</p>';
+      startQuiz();
+    }
+
+    loadQuizData();
+  </script>
   <!-- 返回題庫頁按鈕 -->
   <div class="max-w-xl mx-auto mt-6 flex justify-end">
     <button id="btn-back"
