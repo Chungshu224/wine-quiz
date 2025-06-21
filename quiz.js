@@ -44,6 +44,15 @@ async function fetchSheetData(sheetId, sheetName) {
     return null;
   }
 }
+let submitAnswer = () => {};
+window.submitAnswer = submitAnswer;
+
+function showQuiz(qIdx) {
+  ...
+  submitAnswer = (ans) => {
+    ...
+  };
+}
 
 // 轉換題庫資料，對應你的 Google Sheet 欄位
 function convertSheetToQuestions(values) {
@@ -136,9 +145,11 @@ function showLeaderboard() {
     allQuestions = allQuestions.concat(convertSheetToQuestions(values));
     debug(`[主流程] allQuestions 累計: ${allQuestions.length}`);
   }
-  if (!allQuestions.length) { debug("題庫為空或抓取失敗！"); return; }
-
-
+ if (!allQuestions.length) {
+  debug("題庫為空或抓取失敗！");
+  document.getElementById('quiz-content').innerHTML = '<p class="text-red-600">無法載入題庫資料，請重新選擇產區。</p>';
+  return;
+}
   shuffle(allQuestions);
   const quizQuestions = allQuestions.slice(0, QUIZ_COUNT);
   const allAnswers = Array.from(new Set(allQuestions.map(q => q.answer)));
