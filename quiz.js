@@ -189,7 +189,7 @@ function showLeaderboard() {
 
     document.getElementById('quiz-content').innerHTML = `
       <div class="mb-4 text-lg font-bold">第 ${qIdx + 1} 題 / ${QUIZ_COUNT}</div>
-      <div class="mb-2">這是款來自 <b>${q.country}</b> 的 <b>${q.classification}</b></div>
+     <div class="mb-2">這是款來自 <b>${SHEET_INDEX[q.country]?.label || q.country}</b> 的 <b>${q.classification}</b></div>
       <div class="mb-2">酒的類型是：<b>${q.wine_type}</b>, <b>${q.sub_type}</b></div>
       <div class="mb-2">主要葡萄品種為：<b>${q.grape_1}</b></div>
       <div class="mb-2">是否混釀：<b>${q.is_blend}</b></div>
