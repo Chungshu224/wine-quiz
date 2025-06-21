@@ -122,11 +122,11 @@ function renderQuestion() {
 }
 
   // 題目選項：隨機挑選 4 個產區（含正確答案）
-  const correct = q.Region;
+  const correct = q.Appellation;
   const options = [correct];
 
   while (options.length < 4) {
-    const rand = allQuestions[Math.floor(Math.random() * allQuestions.length)].Region;
+    const rand = allQuestions[Math.floor(Math.random() * allQuestions.length)].Appellation;
     if (!options.includes(rand)) options.push(rand);
   }
 
