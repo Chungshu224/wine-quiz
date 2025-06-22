@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>葡萄酒法定產區推測遊戲</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   </head>
+</head>
 <body class="bg-gray-100">
     <div id="quiz" class="max-w-xl mx-auto mt-4 p-6 bg-white rounded shadow">
         <div id="progress" class="text-sm text-gray-500 mb-2"></div>
@@ -25,9 +25,10 @@
 
     <script>
         // 請替換成您的實際 Google Sheets API 金鑰
-        const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ"; 
+        // *** 這是您當前最重要的待辦事項！務必將此替換為您的有效 API 金鑰，否則會遇到 429 錯誤。***
+        const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ"; // <-- 請替換這裡！
 
-        // 定義不同國家試算表的 ID，以及每個國家可能包含的試算表名稱（目前此處未直接使用 sheetName，但在 loadQuizData 中通過 key.split("__") 來獲取）
+        // 定義不同國家試算表的 ID
         const SHEET_INDEX = {
             italy: { id: "1WLrMMYTPRjIxiWueFA1J3rfKzC34xbqver5tqCzP94s" },
             france: { id: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU" },
@@ -37,7 +38,12 @@
             hungary: { id: "1Rcf_mH4p1F05MhitSEkcjMaIU2mKmiXi77ifbOjfC14" },
             new_zealand: { id: "1O6TqxxB0YSitH9ySe3pncEx_Zl_kVtcJd2zslBDKw5Y" },
             austria: { id: "1qaxLc9-GMyHgPJCajU0Cs0-vrI4nRFsqn1Y3nvj_-m8" },
-            portugal: { id: "18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4" }
+            portugal: { id: "18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4" },
+            // --- 新增的國家 ---
+            chile: { id: "1Dv2jeGsefsuCCyuu8uvMKkHd9NgNa7tV0Woo9FrBNEY" },
+            // Hungary 已經有了
+            south_africa: { id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY" }, // 使用您提供的第一個 ID
+            argentina: { id: "13K5yOvCJYZH6oiITdu5lyKH6a5az7octyuT3m7MzYEM" } // 使用您提供的第二個 ID
         };
 
         // 全局變數，用於儲存所有題目、當前題目索引、分數、難度及開始時間
@@ -254,7 +260,7 @@
                 <div class="mb-2">得分：${score} / ${totalQ}</div>
                 <div class="mb-4">耗時：${totalTime} 秒　｜　難度：${difficulty}</div>
                 <input id="player-name" type="text" placeholder="輸入暱稱儲存成績"
-                       class="border px-3 py-1 rounded w-full mb-4" />
+                        class="border px-3 py-1 rounded w-full mb-4" />
                 <button id="save-btn" class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-6">儲存到排行榜</button>
                 <h3 class="font-semibold mb-2">🏆 排行榜（前 10 名）</h3>
                 <ol id="board" class="list-decimal list-inside mb-6"></ol>
