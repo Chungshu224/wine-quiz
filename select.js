@@ -152,7 +152,8 @@ function handleStartButtonClick() {
   }
 
   // 儲存選擇的產區
-  localStorage.setItem("selectedRegions", JSON.stringify(chosenRegions)); // ✅ 正確！先轉換成 JSON 字串再儲存
+  // 將 chosenRegions 替換為正確的變數 selected
+  localStorage.setItem("selectedRegions", JSON.stringify(selected)); // ✅ 正確！先轉換成 JSON 字串再儲存
 
   // 儲存難度設定
   const difficulty = document.querySelector('input[name="difficulty"]:checked')?.value || 'easy';
