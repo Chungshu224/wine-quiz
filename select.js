@@ -25,7 +25,7 @@ const SHEET_INDEX = {
     label: "美國",
     flag: "🇺🇸"
   },
-  hungary: {
+  hungary: { // 匈牙利已存在
     id: "1Rcf_mH4p1F05MhitSEkcjMaIU2mKmiXi77ifbOjfC14",
     label: "匈牙利",
     flag: "🇭🇺"
@@ -44,9 +44,26 @@ const SHEET_INDEX = {
     id: "18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4",
     label: "葡萄牙",
     flag: "🇵🇹"
+  },
+  // --- 新增的國家 ---
+  chile: {
+    id: "1Dv2jeGsefsuCCyuu8uvMKkHd9NgNa7tV0Woo9FrBNEY",
+    label: "智利", // 您可以根據需求修改此標籤
+    flag: "🇨🇱" // 您可以根據需求修改此旗幟
+  },
+  south_africa: {
+    id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY",
+    label: "南非", // 您可以根據需求修改此標籤
+    flag: "🇿🇦" // 您可以根據需求修改此旗幟
+  },
+  argentina: {
+    id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY", // 請確認此 ID 是否正確，您提供了兩個。
+    label: "阿根廷", // 您可以根據需求修改此標籤
+    flag: "🇦🇷" // 您可以根據需求修改此旗幟
   }
 };
-const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
+
+const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ"; // 請替換成您的實際 Google Sheets API 金鑰
 
 /**
  * 取得指定 Google Sheet 的所有分頁名稱（用 Google Sheets API）
@@ -57,13 +74,18 @@ async function fetchSheetNames(sheetId) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets(properties(title))&key=${API_KEY}`;
   try {
     const res = await fetch(url);
-    if (!res.ok) throw new Error('資料請求失敗，請檢查 API 金鑰與 Google Sheet 權限');
+    if (!res.ok) {
+      // 捕獲並顯示更詳細的錯誤訊息
+      const errorText = await res.text(); // 嘗試讀取錯誤響應的文字
+      throw new Error(`HTTP 錯誤！狀態碼：${res.status}。詳情：${errorText || '無更多資訊'}`);
+    }
     const data = await res.json();
     if (!data.sheets || !Array.isArray(data.sheets)) {
-      throw new Error('資料格式錯誤');
+      throw new Error('資料格式錯誤：未找到 sheets 屬性或其非陣列。');
     }
     return data.sheets.map(s => s.properties.title);
   } catch (error) {
+    console.error('fetchSheetNames 錯誤:', error); // 輸出到控制台以便調試
     alert('載入資料時發生錯誤，請確認 Google Sheet 權限與 API Key 是否有效。\n錯誤訊息：' + error.message);
     return [];
   }
@@ -132,13 +154,21 @@ async function renderRegionUI() {
     const section = createRegionSection(countryKey, countryData, sheets);
     container.appendChild(section);
   }
+
+  // 將監聽器綁定移到這裡，確保 DOM 元素存在
+  document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', updateStartButtonStatus);
+  });
+  updateStartButtonStatus(); // 初始化按鈕狀態
 }
+
 
 /**
  * 全部選擇/全部取消
  */
 function checkAll(checked) {
   document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = checked);
+  updateStartButtonStatus(); // 在全選/全不選後更新按鈕狀態
 }
 
 /**
@@ -152,15 +182,15 @@ function handleStartButtonClick() {
   }
 
   // 儲存選擇的產區
-  // 將 chosenRegions 替換為正確的變數 selected
-  localStorage.setItem("selectedRegions", JSON.stringify(selected)); // ✅ 正確！先轉換成 JSON 字串再儲存
+  localStorage.setItem("selectedRegions", JSON.stringify(selected));
 
-// 儲存難度設定
+  // 儲存難度設定
   const difficulty = document.querySelector('input[name="difficulty"]:checked')?.value || 'easy';
   localStorage.setItem('difficulty', difficulty);
 
   window.location.href = 'quiz.html';
 }
+
 /**
  * 監控所有 checkbox 狀態，更新開始按鈕及選取數量
  */
@@ -181,33 +211,18 @@ function updateStartButtonStatus() {
   if (totalCountText) totalCountText.textContent = totalCount;
 }
 
-// 作區塊渲染後綁定監控
-async function renderRegionUI() {
-  const container = document.getElementById('region-checkboxes');
-  if (!container) return;
-  container.innerHTML = '';
-
-  for (const [countryKey, countryData] of Object.entries(SHEET_INDEX)) {
-    const sheets = await fetchSheetNames(countryData.id);
-    const section = createRegionSection(countryKey, countryData, sheets);
-    container.appendChild(section);
-  }
-
-  document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => {
-    cb.addEventListener('change', updateStartButtonStatus);
-  });
-  updateStartButtonStatus();
-}
-
-// 全選/全不選後也要觸發檢查
-function checkAll(checked) {
-  document.querySelectorAll('#region-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = checked);
-  updateStartButtonStatus();
-}
 
 // 綁定事件與初始化畫面
-renderCountrySelect(); // 初始化國家下拉選單
-document.getElementById('start-button').onclick = handleStartButtonClick;
-document.getElementById('uncheck-all').onclick = () => checkAll(false);
-document.getElementById('check-all').onclick = () => checkAll(true);
-renderRegionUI();
+document.addEventListener('DOMContentLoaded', () => { // 使用 DOMContentLoaded 確保所有 DOM 元素都已載入
+  renderCountrySelect(); // 初始化國家下拉選單
+  renderRegionUI(); // 渲染所有國家與產區的 UI
+
+  // 確保這些按鈕在 DOM 中存在
+  const startButton = document.getElementById('start-button');
+  const uncheckAllButton = document.getElementById('uncheck-all');
+  const checkAllButton = document.getElementById('check-all');
+
+  if (startButton) startButton.onclick = handleStartButtonClick;
+  if (uncheckAllButton) uncheckAllButton.onclick = () => checkAll(false);
+  if (checkAllButton) checkAllButton.onclick = () => checkAll(true);
+});
