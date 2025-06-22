@@ -155,7 +155,7 @@ function handleStartButtonClick() {
   // 將 chosenRegions 替換為正確的變數 selected
   localStorage.setItem("selectedRegions", JSON.stringify(selected)); // ✅ 正確！先轉換成 JSON 字串再儲存
 
-  // 儲存難度設定
+// 儲存難度設定
   const difficulty = document.querySelector('input[name="difficulty"]:checked')?.value || 'easy';
   localStorage.setItem('difficulty', difficulty);
 
