@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>葡萄酒法定產區推測遊戲</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
+    </head>
 <body class="bg-gray-100">
     <div id="quiz" class="max-w-xl mx-auto mt-4 p-6 bg-white rounded shadow">
         <div id="progress" class="text-sm text-gray-500 mb-2"></div>
@@ -19,10 +19,12 @@
         </button>
     </div>
 
+    <audio id="aud-correct" src="sounds/correct.mp3" preload="auto"></audio>
+    <audio id="aud-wrong" src="sounds/wrong.mp3" preload="auto"></audio>
+    <audio id="aud-click" src="sounds/click.mp3" preload="auto"></audio>
+
     <script>
-        // 請替換成您的實際 Google Sheets API 金鑰
-        // *** 這是您當前最重要的待辦事項！務必將此替換為您的有效 API 金鑰，否則會遇到 429 錯誤。***
-        const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ"; // <-- 請替換這裡！
+       const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ"; // 
 
         // 定義不同國家試算表的 ID
         const SHEET_INDEX = {
@@ -36,16 +38,21 @@
             austria: { id: "1qaxLc9-GMyHgPJCajU0Cs0-vrI4nRFsqn1Y3nvj_-m8" },
             portugal: { id: "18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4" },
             chile: { id: "1Dv2jeGsefsuCCyuu8uvMKkHd9NgNa7tV0Woo9FrBNEY" },
-            south_africa: { id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY" }, // 使用您提供的第一個 ID
-            argentina: { id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY" } // 使用您提供的第二個 ID
+            south_africa: { id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY" },
+            argentina: { id: "13K5yOvCJYZH6oiITdu5lyKH6a5az7octyuT3m7MzYEM" } // 使用您提供的第二個 ID (這裡之前有誤，已更正為您提供的第一個阿根廷ID)
         };
 
         // 全局變數，用於儲存所有題目、當前題目索引、分數、難度及開始時間
-        let allQuestions = [];
+        let allQuestions = []; // 從 Google Sheets 載入的所有題目
+        let currentQuizQuestions = []; // 當前測驗回合要使用的題目（固定10題）
+        let allAppellations = []; // 所有載入的 Appellation，用於生成選項
         let currentQuestionIndex = 0;
         let score = 0;
         let difficulty = "easy";
         let startTime = 0;
+
+        // 遊戲設定：每回合的題目數量
+        const QUIZ_LENGTH = 10;
 
         // 取得主要測驗相關的 DOM 元素引用
         const quizContainer = document.getElementById("quiz");
@@ -60,38 +67,36 @@
          * 然後使用 Google Sheets API 獲取資料。
          */
         async function loadQuizData() {
-            // 在載入資料時顯示「載入中...」訊息
             quizContainer.innerHTML = '<p class="text-center text-gray-500">載入題目中...</p>';
 
             const selected = JSON.parse(localStorage.getItem("selectedRegions") || "[]");
             difficulty = localStorage.getItem("difficulty") || "easy";
 
-            // 如果沒有選擇任何區域，則顯示提示訊息並停止載入
             if (selected.length === 0) {
                 quizContainer.innerHTML = '<p class="text-center text-red-500">請先在題庫選擇頁面選擇要練習的產區。</p>';
-                return; // 停止執行後續程式碼
+                return;
             }
 
             try {
-                // 遍歷所有選定的區域，並為每個區域發起資料獲取請求
                 const fetches = selected.map(async key => {
-                    const [countryKey, sheetName] = key.split("__"); // 從 key 中解析國家鍵和試算表名稱
-                    const sheetId = SHEET_INDEX[countryKey].id; // 根據國家鍵獲取試算表 ID
+                    const [countryKey, sheetName] = key.split("__");
+                    const sheetId = SHEET_INDEX[countryKey]?.id; // 使用 ?. 避免錯誤
+                    if (!sheetId) {
+                        console.warn(`SHEET_INDEX 中未找到 ${countryKey} 的 ID。`);
+                        return [];
+                    }
                     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${API_KEY}`;
                     const res = await fetch(url);
-                    // 檢查 HTTP 響應是否成功
                     if (!res.ok) {
                         throw new Error(`HTTP 錯誤！狀態碼：${res.status}，網址：${url}`);
                     }
                     const data = await res.json();
                     const rows = data.values;
-                    // 確保有標題行和至少一行資料
                     if (!rows || rows.length < 2) {
                         console.warn(`未找到 ${key} 的資料或只有標題。`);
-                        return []; // 返回空陣列
+                        return [];
                     }
-                    const headers = rows[0]; // 第一行為標題行
-                    // 將資料行轉換為物件陣列
+                    const headers = rows[0];
                     return rows.slice(1).map(row => {
                         const obj = {};
                         headers.forEach((h, i) => obj[h] = row[i] || "");
@@ -99,21 +104,20 @@
                     });
                 });
 
-                // 等待所有資料獲取請求完成，並將結果扁平化成一個陣列
                 const results = await Promise.all(fetches);
-                allQuestions = results.flat();
+                allQuestions = results.flat().filter(q => q.Appellation); // 過濾掉沒有 Appellation 的題目
+                
+                // 收集所有唯一的 Appellation，用於生成選項
+                allAppellations = [...new Set(allQuestions.map(q => q.Appellation))];
 
-                // 如果載入後沒有任何題目，顯示錯誤訊息
                 if (allQuestions.length === 0) {
-                    quizContainer.innerHTML = '<p class="text-center text-red-500">未能載入任何題目，請檢查所選題庫是否有資料。</p>';
+                    quizContainer.innerHTML = '<p class="text-center text-red-500">未能載入任何題目，請檢查所選題庫是否有資料或 Appellation 欄位。</p>';
                     return;
                 }
 
-                shuffle(allQuestions); // 隨機打亂題目順序
                 startQuiz(); // 開始測驗
 
             } catch (error) {
-                // 處理載入資料時的錯誤
                 console.error("載入測驗資料時出錯：", error);
                 quizContainer.innerHTML = `<p class="text-center text-red-500">載入題目失敗：${error.message}，請檢查網路連線或 API 金鑰是否正確。</p>`;
             }
@@ -127,20 +131,26 @@
             currentQuestionIndex = 0;
             score = 0;
             startTime = Date.now();
-            // 清除 quizContainer 之前的內容，並重新建立測驗所需的基本 DOM 結構
-            // 這是為了確保在重新開始測驗時，畫面回到初始狀態
+
+            // 從 allQuestions 中隨機選取 QUIZ_LENGTH 題作為本次測驗的題目
+            currentQuizQuestions = [...allQuestions]; // 複製一份，以免影響 allQuestions
+            shuffle(currentQuizQuestions); // 先打亂所有題目
+            currentQuizQuestions = currentQuizQuestions.slice(0, QUIZ_LENGTH); // 取前 QUIZ_LENGTH 題
+
+            if (currentQuizQuestions.length === 0) {
+                quizContainer.innerHTML = '<p class="text-center text-red-500">沒有足夠的題目可以開始測驗，請嘗試選擇更多題庫。</p>';
+                return;
+            }
+
             quizContainer.innerHTML = `
                 <div id="progress" class="text-sm text-gray-500 mb-2"></div>
                 <div id="question-box" class="mb-4"></div>
                 <div id="options-box" class="mb-4"></div>
                 <div id="feedback" class="text-lg"></div>
             `;
-            // 注意：如果在 startQuiz 中清空了 quizContainer.innerHTML，
-            // 則 quizContainer, questionBox, optionsBox, feedback, progressIndicator
-            // 這些全局變數的引用需要重新獲取，或確保這些 DOM 元素在結構中是靜態的。
-            // 在此版本中，由於這些元素在 showResult 時會被替換，但在 startQuiz 時其實不需要重新獲取，
-            // 因為它們是 `quiz` div 內部預先存在的結構。
-            renderQuestion(); // 渲染第一道題目
+            // 注意：這裡不需要重新獲取 DOM 引用，因為它們是 quizContainer 內部靜態存在的
+            // 如果您在 showResult 之後會改變 quizContainer 結構，那麼在 startQuiz 中重新獲取是正確的。
+            renderQuestion();
         }
 
         /**
@@ -148,8 +158,8 @@
          * 根據當前題目索引和難度顯示題目內容和選項。
          */
         function renderQuestion() {
-            const q = allQuestions[currentQuestionIndex];
-            // 如果沒有更多題目，則顯示結果
+            // 從 currentQuizQuestions 中獲取當前題目
+            const q = currentQuizQuestions[currentQuestionIndex];
             if (!q) {
                 showResult();
                 return;
@@ -157,7 +167,6 @@
 
             let questionText = "";
             if (difficulty === "easy") {
-                // 簡易模式顯示所有相關資訊
                 questionText = `
                     <div class="mb-2">這是款來自<b>${q.Country}</b> 的 <b>${q.Classification}</b></div>
                     <div class="mb-2">酒的類型是：<b>${q.Wine_type}</b>, <b>${q.Sub_type}</b></div>
@@ -168,39 +177,51 @@
                     <div class="my-4 font-semibold">請問這是哪個法定產區？</div>
                 `;
             } else {
-                // 一般模式只顯示部分資訊
                 questionText = `
                     這是款【${q.Wine_type}】，<br/>
                     主要使用【${q.Grape_1}】釀製，<br/>
                     請問這是哪個法定產區?
                 `;
             }
-            questionBox.innerHTML = questionText; // 將題目內容放入題目區
+            questionBox.innerHTML = questionText;
 
-            // 更新進度顯示
-            progressIndicator.textContent = `第 ${currentQuestionIndex + 1} 題 / 共 ${allQuestions.length} 題`;
+            progressIndicator.textContent = `第 ${currentQuestionIndex + 1} 題 / 共 ${currentQuizQuestions.length} 題`;
 
-            // 題目選項：隨機挑選 4 個產區（含正確答案）
-            const correct = q.Appellation;
-            const options = [correct]; // 將正確答案加入選項
+            // 生成選項：從所有載入的 Appellation 中隨機挑選 3 個不同的錯誤選項
+            const correctAppellation = q.Appellation;
+            const options = [correctAppellation];
+            const availableAppellationsForOptions = allAppellations.filter(app => app !== correctAppellation); // 排除正確答案
+            
+            shuffle(availableAppellationsForOptions); // 打亂可用選項
+            
+            // 從打亂後的可用選項中選取，確保選項數量為4個
+            for (let i = 0; options.length < 4 && i < availableAppellationsForOptions.length; i++) {
+                options.push(availableAppellationsForOptions[i]);
+            }
+
+            // 如果可用選項不足以填充4個選項，則可能有重複，但這滿足「可以重複作為答案挑選」的要求
+            // 且「從勾選的Region裡挑選」的選項來源是 allAppellations，它包含了所有已載入產區的 Appellation
+            // 確保選項至少有4個，如果唯一的 Appellation 不足，可能會有重複選項。
+            // 這裡確保總會有4個選項，如果allAppellations數量不足，會重複加入。
             while (options.length < 4) {
-                // 隨機從所有題目中挑選一個產區作為錯誤選項，確保不重複
-                const randQuestion = allQuestions[Math.floor(Math.random() * allQuestions.length)];
-                if (randQuestion && !options.includes(randQuestion.Appellation)) {
-                    options.push(randQuestion.Appellation);
+                const randomApp = allAppellations[Math.floor(Math.random() * allAppellations.length)];
+                if (!options.includes(randomApp) || allAppellations.length < 4) { // 如果Appellation少於4個，允許重複
+                    options.push(randomApp);
                 }
             }
-            shuffle(options); // 打亂選項順序
 
-            optionsBox.innerHTML = ""; // 清空舊選項
+
+            shuffle(options); // 再次打亂最終的選項順序
+
+            optionsBox.innerHTML = "";
             options.forEach(option => {
-                const btn = document.createElement("button"); // 創建按鈕元素
-                btn.textContent = option; // 設定按鈕文字
-                btn.className = "block w-full text-left px-4 py-2 mb-2 bg-white border rounded hover:bg-blue-100"; // 設定按鈕樣式
-                btn.onclick = () => checkAnswer(option, correct); // 設定點擊事件處理器
-                optionsBox.appendChild(btn); // 將按鈕加入選項區
+                const btn = document.createElement("button");
+                btn.textContent = option;
+                btn.className = "block w-full text-left px-4 py-2 mb-2 bg-white border rounded hover:bg-blue-100";
+                btn.onclick = () => checkAnswer(option, correctAppellation);
+                optionsBox.appendChild(btn);
             });
-            feedback.textContent = ""; // 清除上一題的回饋訊息
+            feedback.textContent = "";
         }
 
         /**
@@ -208,35 +229,34 @@
          * 根據選擇的答案是否正確更新分數並顯示回饋訊息。
          */
         function checkAnswer(selected, correct) {
-            // 禁用所有選項按鈕，防止重複點擊
             Array.from(optionsBox.children).forEach(button => {
-                button.disabled = true; // 禁用按鈕
+                button.disabled = true;
                 if (button.textContent === correct) {
-                    button.classList.add("border-green-500", "bg-green-100", "font-bold"); // 正確答案顯示綠色
+                    button.classList.add("border-green-500", "bg-green-100", "font-bold");
                 } else if (button.textContent === selected) {
-                    button.classList.add("border-red-500", "bg-red-100"); // 錯誤答案顯示紅色
+                    button.classList.add("border-red-500", "bg-red-100");
                 }
             });
 
             if (selected === correct) {
-                score++; // 分數增加
+                score++;
                 feedback.textContent = "答對了！";
-                feedback.className = "text-green-600 mb-4 font-bold"; // 綠色字體
-                playSound("correct"); // 播放正確音效
+                feedback.className = "text-green-600 mb-4 font-bold";
+                playSound("correct");
             } else {
                 feedback.textContent = `答錯了，正確答案是：${correct}`;
-                feedback.className = "text-red-600 mb-4 font-bold"; // 紅色字體
-                playSound("wrong"); // 播放錯誤音效
+                feedback.className = "text-red-600 mb-4 font-bold";
+                playSound("wrong");
             }
 
-            // 進入下一題或顯示結果
             currentQuestionIndex++;
-            if (currentQuestionIndex < allQuestions.length) {
+            // 檢查是否達到QUIZ_LENGTH的題目數量，而不是allQuestions.length
+            if (currentQuestionIndex < QUIZ_LENGTH) {
                 setTimeout(() => {
-                    renderQuestion(); // 延遲一段時間後渲染下一題
-                }, 1500); // 1.5 秒後
+                    renderQuestion();
+                }, 1500);
             } else {
-                setTimeout(showResult, 1500); // 1.5 秒後顯示結果
+                setTimeout(showResult, 1500);
             }
         }
 
@@ -245,10 +265,10 @@
          * 計算總耗時，顯示得分，並提供儲存成績到排行榜的功能。
          */
         function showResult() {
-            const totalTime = Math.round((Date.now() - startTime) / 1000); // 計算總耗時（秒）
-            const totalQ = allQuestions.length; // 總題目數
+            const totalTime = Math.round((Date.now() - startTime) / 1000);
+            // 總題目數現在是 QUIZ_LENGTH
+            const totalQ = QUIZ_LENGTH;
 
-            // 更新 quizContainer 的內容，顯示結果頁面
             quizContainer.innerHTML = `
                 <div class="text-xl font-bold mb-4">🎉 測驗完成！</div>
                 <div class="mb-2">得分：${score} / ${totalQ}</div>
@@ -263,33 +283,32 @@
                 </button>
             `;
 
-            // 為儲存按鈕綁定事件
             document.getElementById("save-btn").onclick = () =>
                 saveLeaderboard(totalQ, totalTime);
 
-            renderBoard(); // 渲染排行榜
+            renderBoard();
         }
 
         /**
          * 儲存成績到本地儲存的排行榜中
          */
         function saveLeaderboard(totalQ, totalTime) {
-            const name = document.getElementById("player-name").value.trim() || "玩家"; // 獲取玩家暱稱，如果為空則預設為「玩家」
+            const name = document.getElementById("player-name").value.trim() || "玩家";
             const record = {
                 name,
                 score,
                 totalQ,
                 time: totalTime,
                 difficulty,
-                date: new Date().toLocaleString() // 記錄當前時間
+                date: new Date().toLocaleString()
             };
 
-            const board = JSON.parse(localStorage.getItem("leaderboard") || "[]"); // 從本地儲存獲取排行榜資料
-            board.push(record); // 添加新紀錄
-            board.sort((a, b) => b.score - a.score || a.time - b.time); // 排序：分數高的在前，分數相同則時間短的在前
-            localStorage.setItem("leaderboard", JSON.stringify(board.slice(0, 10))); // 只保留前 10 名
-            renderBoard(); // 重新渲染排行榜
-            document.getElementById("player-name").value = ""; // 清空暱稱輸入框
+            const board = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+            board.push(record);
+            board.sort((a, b) => b.score - a.score || a.time - b.time);
+            localStorage.setItem("leaderboard", JSON.stringify(board.slice(0, 10)));
+            renderBoard();
+            document.getElementById("player-name").value = "";
         }
 
         /**
@@ -297,14 +316,14 @@
          */
         function renderBoard() {
             const list = document.getElementById("board");
-            if (!list) return; // 如果排行榜元素還不存在，則退出 (例如在 showResult 之前)
+            if (!list) return;
             const board = JSON.parse(localStorage.getItem("leaderboard") || "[]");
             list.innerHTML = board
                 .map(
                     (r, i) =>
                         `<li>${r.name} - ${r.score}/${r.totalQ} 分 - ${r.time}s - ${r.difficulty.toUpperCase()} - ${r.date}</li>`
                 )
-                .join(""); // 將排行榜資料轉換為 HTML 列表項
+                .join("");
         }
 
         /**
@@ -314,7 +333,7 @@
         function shuffle(arr) {
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]]; // 交換元素
+                [arr[i], arr[j]] = [arr[j], arr[i]];
             }
             return arr;
         }
@@ -325,8 +344,7 @@
         function playSound(type) {
             const aud = document.getElementById(`aud-${type}`);
             if (aud) {
-                aud.currentTime = 0; // 將音效播放位置重置到開頭，確保每次都能完整播放
-                // 使用 Promise 處理 play() 方法，捕獲潛在的自動播放錯誤
+                aud.currentTime = 0;
                 aud.play().catch(e => console.warn(`音效播放失敗 (${type}):`, e));
             }
         }
@@ -339,8 +357,8 @@
         }
 
         // 事件監聽器
-        document.getElementById("btn-back").onclick = toSelectPage; // 為返回按鈕綁定事件
-        window.onload = loadQuizData; // 頁面載入完成後開始載入測驗資料
+        document.getElementById("btn-back").onclick = toSelectPage;
+        window.onload = loadQuizData;
     </script>
 </body>
 </html>
