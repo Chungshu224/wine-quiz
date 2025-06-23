@@ -51,7 +51,7 @@ const SHEET_INDEX = {
     flag: "🇨🇱"
   },
   south_africa: {
-    id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY",
+    id: "13K5yOvCJYZH6oiITdu5lyKH6a5az7octyuT3m7MzYEM",
     label: "南非",
     flag: "🇿🇦"
   },
