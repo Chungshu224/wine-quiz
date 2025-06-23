@@ -25,7 +25,7 @@ const SHEET_INDEX = {
     label: "美國",
     flag: "🇺🇸"
   },
-  hungary: { // 匈牙利已存在
+  hungary: { 
     id: "1Rcf_mH4p1F05MhitSEkcjMaIU2mKmiXi77ifbOjfC14",
     label: "匈牙利",
     flag: "🇭🇺"
