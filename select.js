@@ -57,13 +57,13 @@ const SHEET_INDEX = {
     flag: "🇿🇦" // 您可以根據需求修改此旗幟
   },
   argentina: {
-    id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY", // 請確認此 ID 是否正確，您提供了兩個。
+    id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY",
     label: "阿根廷", // 您可以根據需求修改此標籤
     flag: "🇦🇷" // 您可以根據需求修改此旗幟
   }
 };
 
-const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ"; // 請替換成您的實際 Google Sheets API 金鑰
+const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ";
 
 /**
  * 取得指定 Google Sheet 的所有分頁名稱（用 Google Sheets API）
