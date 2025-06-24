@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>選擇葡萄酒題庫</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
   <main class="max-w-3xl w-full bg-white p-6 rounded-xl shadow-lg" aria-labelledby="main-title">
@@ -12,26 +13,20 @@
         <span role="img" aria-label="書本">📚</span>
         選擇題庫地區
       </h1>
-      <!-- 操作說明 -->
       <p class="mb-4 text-gray-600" id="instruction">
         請選擇想要測驗的產區與難易度，然後點擊「開始作答」。
       </p>
     </header>
-    <!-- 地區選擇狀態提示 -->
     <div class="mb-2 flex items-center gap-2 text-sm text-gray-500" aria-live="polite">
       <span id="region-status" data-total="0" data-selected="0">
         已選 <span id="selected-count">0</span> / <span id="total-count">0</span> 產區
       </span>
     </div>
 
-    <!-- 分類收合區塊(Accordion) -->
     <section id="region-checkboxes" class="space-y-4" aria-label="地區勾選區塊" tabindex="0">
-      <!-- select.js 動態插入產區。Accordion 標題需 aria-expanded, aria-controls。 -->
-      <!-- 空狀態 -->
       <div id="region-empty" class="hidden text-center p-4 text-gray-500" aria-live="polite">
         目前沒有可用產區
       </div>
-      <!-- 載入指示 -->
       <div id="region-loading" class="flex justify-center p-4">
         <svg class="animate-spin h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" aria-label="載入中" role="status">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -51,7 +46,7 @@
         困難（僅提供類型與主葡萄品種）
       </label>
     </div>
-  
+
     <div class="flex flex-wrap gap-3 mt-6">
       <button
         id="uncheck-all"
