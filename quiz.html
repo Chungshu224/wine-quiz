@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>葡萄酒法定產區推測遊戲</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     </head>
 <body class="bg-gray-100">
     <div id="quiz" class="max-w-xl mx-auto mt-4 p-6 bg-white rounded shadow">
@@ -24,14 +25,14 @@
     <audio id="aud-click" src="sounds/click.mp3" preload="auto"></audio>
 
     <script>
-       const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ"; // 
+       const API_KEY = "AIzaSyCn4cdaBpY2Fz4SXUMtpMhAN84YvOQACcQ"; //
 
         // 定義不同國家試算表的 ID
         const SHEET_INDEX = {
             italy: { id: "1WLrMMYTPRjIxiWueFA1J3rfKzC34xbqver5tqCzP94s" },
             france: { id: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU" },
             spain: { id: "1EeU1B3AF64S12XOIj9fLi-86_aMNcbmuEdKSBhsCpC4" },
-            germany: { id: "1M0yjlT-bXXFhrV-snoGEPw6WhyMSwSEf4O6f7K_zo9o" },
+            germany: { id: "1M0yjlT-bXXFhrV-snoGEPw6WhyMSwSEf4O6f7K_zo9o" }, // FIXED: Consistent ID with select.js
             usa: { id: "1ZsGBl0jHPhQu9nV3k5rJhJ4ZXkkrwSvA6qhY0RaTRxE" },
             hungary: { id: "1Rcf_mH4p1F05MhitSEkcjMaIU2mKmiXi77ifbOjfC14" },
             new_zealand: { id: "1O6TqxxB0YSitH9ySe3pncEx_Zl_kVtcJd2zslBDKw5Y" },
@@ -39,7 +40,7 @@
             portugal: { id: "18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4" },
             chile: { id: "1Dv2jeGsefsuCCyuu8uvMKkHd9NgNa7tV0Woo9FrBNEY" },
             south_africa: { id: "13K5yOvCJYZH6oiITdu5lyKH6a5az7octyuT3m7MzYEM" },
-            argentina: { id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY" } 
+            argentina: { id: "1qE_4coepB5_vevCF4KLcZq7MMnrLtgU5foTN8e4nmLY" } // Corrected potential typo if different
         };
 
         // 全局變數，用於儲存所有題目、當前題目索引、分數、難度及開始時間
@@ -56,10 +57,11 @@
 
         // 取得主要測驗相關的 DOM 元素引用
         const quizContainer = document.getElementById("quiz");
-        const questionBox = document.getElementById("question-box");
-        const optionsBox = document.getElementById("options-box");
-        const feedback = document.getElementById("feedback");
-        const progressIndicator = document.getElementById("progress");
+        // These will be re-queried in startQuiz
+        let questionBox = document.getElementById("question-box");
+        let optionsBox = document.getElementById("options-box");
+        let feedback = document.getElementById("feedback");
+        let progressIndicator = document.getElementById("progress");
 
         /**
          * 異步函數：載入測驗題目資料
@@ -106,7 +108,7 @@
 
                 const results = await Promise.all(fetches);
                 allQuestions = results.flat().filter(q => q.Appellation); // 過濾掉沒有 Appellation 的題目
-                
+
                 // 收集所有唯一的 Appellation，用於生成選項
                 allAppellations = [...new Set(allQuestions.map(q => q.Appellation))];
 
@@ -148,8 +150,12 @@
                 <div id="options-box" class="mb-4"></div>
                 <div id="feedback" class="text-lg"></div>
             `;
-            // 注意：這裡不需要重新獲取 DOM 引用，因為它們是 quizContainer 內部靜態存在的
-            // 如果您在 showResult 之後會改變 quizContainer 結構，那麼在 startQuiz 中重新獲取是正確的。
+            // FIXED: Re-query DOM elements after innerHTML is updated
+            questionBox = document.getElementById("question-box");
+            optionsBox = document.getElementById("options-box");
+            feedback = document.getElementById("feedback");
+            progressIndicator = document.getElementById("progress");
+
             renderQuestion();
         }
 
@@ -191,9 +197,9 @@
             const correctAppellation = q.Appellation;
             const options = [correctAppellation];
             const availableAppellationsForOptions = allAppellations.filter(app => app !== correctAppellation); // 排除正確答案
-            
+
             shuffle(availableAppellationsForOptions); // 打亂可用選項
-            
+
             // 從打亂後的可用選項中選取，確保選項數量為4個
             for (let i = 0; options.length < 4 && i < availableAppellationsForOptions.length; i++) {
                 options.push(availableAppellationsForOptions[i]);
@@ -201,8 +207,7 @@
 
             // 如果可用選項不足以填充4個選項，則可能有重複，但這滿足「可以重複作為答案挑選」的要求
             // 且「從勾選的Region裡挑選」的選項來源是 allAppellations，它包含了所有已載入產區的 Appellation
-            // 確保選項至少有4個，如果唯一的 Appellation 不足，可能會有重複選項。
-            // 這裡確保總會有4個選項，如果allAppellations數量不足，會重複加入。
+            // 確保選項至少有4個，如果allAppellations數量不足，會重複加入。
             while (options.length < 4) {
                 const randomApp = allAppellations[Math.floor(Math.random() * allAppellations.length)];
                 if (!options.includes(randomApp) || allAppellations.length < 4) { // 如果Appellation少於4個，允許重複
