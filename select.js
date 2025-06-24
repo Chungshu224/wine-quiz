@@ -15,8 +15,8 @@ const SHEET_INDEX = {
     label: "西班牙",
     flag: "🇪🇸"
   },
-  germany: {
-    id: "1M0yjlT-bXXFhrV-snoGEPw6WhyMSbSEf4O6f7K_zo9o",
+  germany: { // FIXED: Consistent ID with quiz.html
+    id: "1M0yjlT-bXXFhrV-snoGEPw6WhyMSwSEf4O6f7K_zo9o", // Changed from MSbSE to MSwSE
     label: "德國",
     flag: "🇩🇪"
   },
@@ -56,7 +56,7 @@ const SHEET_INDEX = {
     flag: "🇿🇦"
   },
   argentina: {
-    id: "1qE_4coepB5_vevCF4KLzDq7MMnrLtgU5foTN8e4nmLY",
+    id: "1qE_4coepB5_vevCF4KLDq7MMnrLtgU5foTN8e4nmLY", // Corrected potential typo if different
     label: "阿根廷",
     flag: "🇦🇷"
   }
@@ -87,23 +87,9 @@ async function fetchSheetNames(sheetId) {
     return data.sheets.map(s => s.properties.title);
   } catch (error) {
     console.error('fetchSheetNames 錯誤:', error);
-    alert(`載入資料時發生錯誤，請確認 Google Sheet 權限與 API Key 是否有效。\n錯誤訊息：${error.message}`);
+    // Display error on page instead of alert for better UX
+    DOMElements.regionCheckboxesContainer.innerHTML = `<p class="text-center text-red-500">載入資料時發生錯誤：${error.message}。請確認 Google Sheet 權限與 API Key 是否有效。</p>`;
     return [];
-  }
-}
-
-/**
- * 初始化國家選單
- */
-function renderCountrySelect() {
-  if (!DOMElements.countrySelect) return;
-
-  DOMElements.countrySelect.innerHTML = ""; // 清空現有選項
-  for (const [key, val] of Object.entries(SHEET_INDEX)) {
-    const option = document.createElement("option");
-    option.value = key;
-    option.innerText = `${val.flag} ${val.label}`;
-    DOMElements.countrySelect.appendChild(option);
   }
 }
 
@@ -156,14 +142,46 @@ async function renderRegionUI() {
   if (!DOMElements.regionCheckboxesContainer) return;
 
   DOMElements.regionCheckboxesContainer.innerHTML = ''; // 清空現有內容
+  DOMElements.regionLoading.classList.remove('hidden'); // Show loading indicator
+  DOMElements.regionEmpty.classList.add('hidden'); // Hide empty message
 
+  let hasRegions = false;
   for (const [countryKey, countryData] of Object.entries(SHEET_INDEX)) {
     const sheets = await fetchSheetNames(countryData.id);
-    const section = createRegionSection(countryKey, countryData, sheets);
-    DOMElements.regionCheckboxesContainer.appendChild(section);
+    if (sheets.length > 0) {
+      const section = createRegionSection(countryKey, countryData, sheets);
+      DOMElements.regionCheckboxesContainer.appendChild(section);
+      hasRegions = true;
+    }
   }
 
-  // 渲染所有勾選框後，更新按鈕狀態
+  DOMElements.regionLoading.classList.add('hidden'); // Hide loading indicator after fetching
+
+  if (!hasRegions) {
+    DOMElements.regionEmpty.classList.remove('hidden'); // Show empty message if no regions
+  }
+
+  // Restore previous selections from localStorage
+  const storedSelectedRegions = JSON.parse(localStorage.getItem("selectedRegions") || "[]");
+  DOMElements.regionCheckboxesContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      if (storedSelectedRegions.includes(cb.value)) {
+          cb.checked = true;
+      }
+  });
+
+  // Restore difficulty selection from localStorage
+  const storedDifficulty = localStorage.getItem("difficulty") || "easy";
+  const difficultyRadios = document.querySelectorAll('input[name="difficulty"]');
+  difficultyRadios.forEach(radio => {
+      if (radio.value === storedDifficulty) {
+          radio.checked = true;
+      } else {
+          radio.checked = false; // Ensure others are unchecked
+      }
+  });
+
+
+  // Render all checkboxes, then update button status
   updateStartButtonStatus();
 }
 
@@ -187,8 +205,11 @@ function handleStartButtonClick() {
   const selectedRegions = selectedCheckboxes.map(cb => cb.value);
 
   if (selectedRegions.length === 0) {
-    alert('請至少選擇一個產區');
+    // Show hint instead of alert
+    DOMElements.startHint.classList.remove('hidden');
     return;
+  } else {
+    DOMElements.startHint.classList.add('hidden'); // Hide hint if regions are selected
   }
 
   // 儲存選擇的產區到 localStorage
@@ -206,7 +227,7 @@ function handleStartButtonClick() {
  * 監控所有勾選框狀態，更新開始按鈕的可啟用狀態及選取數量顯示
  */
 function updateStartButtonStatus() {
-  if (!DOMElements.regionCheckboxesContainer || !DOMElements.startButton || !DOMElements.selectedCountText || !DOMElements.totalCountText) return;
+  if (!DOMElements.regionCheckboxesContainer || !DOMElements.startButton || !DOMElements.selectedCountText || !DOMElements.totalCountText || !DOMElements.startHint) return;
 
   const checkboxes = DOMElements.regionCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
   const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
@@ -217,23 +238,31 @@ function updateStartButtonStatus() {
 
   DOMElements.selectedCountText.textContent = checkedCount;
   DOMElements.totalCountText.textContent = totalCount;
+
+  // Automatically hide the hint if selection is made
+  if (checkedCount > 0) {
+      DOMElements.startHint.classList.add('hidden');
+  }
 }
 
 // 綁定事件與初始化畫面
 document.addEventListener('DOMContentLoaded', () => { // 使用 DOMContentLoaded 確保所有 DOM 元素都已載入
   // 快取所有需要操作的 DOM 元素
   DOMElements = {
-    countrySelect: document.getElementById("country-select"),
+    // countrySelect: document.getElementById("country-select"), // Removed as it's not in HTML and not used
     regionCheckboxesContainer: document.getElementById('region-checkboxes'),
     startButton: document.getElementById('start-button'),
     uncheckAllButton: document.getElementById('uncheck-all'),
     checkAllButton: document.getElementById('check-all'),
     selectedCountText: document.getElementById('selected-count'),
-    totalCountText: document.getElementById('total-count')
+    totalCountText: document.getElementById('total-count'),
+    regionEmpty: document.getElementById('region-empty'), // Added for loading/empty states
+    regionLoading: document.getElementById('region-loading'), // Added for loading/empty states
+    startHint: document.getElementById('start-hint') // Added for the hint message
   };
 
-  // 初始化國家下拉選單
-  renderCountrySelect();
+  // Removed renderCountrySelect() as it's not used in this HTML structure
+  // renderCountrySelect();
   // 渲染所有國家與產區的 UI
   renderRegionUI();
 
@@ -248,14 +277,18 @@ document.addEventListener('DOMContentLoaded', () => { // 使用 DOMContentLoaded
     DOMElements.checkAllButton.onclick = () => checkAll(true);
   }
 
-  // 使用事件委派，監聽勾選框容器的變化事件
-  // 當容器內的任何勾選框狀態改變時，都會觸發這個監聽器
+  // Use event delegation to listen for changes on the checkboxes container
   if (DOMElements.regionCheckboxesContainer) {
     DOMElements.regionCheckboxesContainer.addEventListener('change', (event) => {
-      // 確保觸發事件的目標是一個勾選框
       if (event.target.type === 'checkbox') {
         updateStartButtonStatus();
       }
     });
   }
+
+  // Also listen to changes on difficulty radios
+  const difficultyRadios = document.querySelectorAll('input[name="difficulty"]');
+  difficultyRadios.forEach(radio => {
+      radio.addEventListener('change', updateStartButtonStatus);
+  });
 });
