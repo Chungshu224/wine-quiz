@@ -14,7 +14,7 @@
         選擇題庫地區
       </h1>
       <p class="mb-4 text-gray-600" id="instruction">
-        請選擇想要測驗的產區與難易度，然後點擊「開始作答」。
+        請點擊國家名稱以展開並選擇該國家的產區，然後點擊「開始作答」。
       </p>
     </header>
     <div class="mb-2 flex items-center gap-2 text-sm text-gray-500" aria-live="polite">
@@ -23,19 +23,20 @@
       </span>
     </div>
 
-    <section id="region-checkboxes" class="space-y-4" aria-label="地區勾選區塊" tabindex="0">
-      <div id="region-empty" class="hidden text-center p-4 text-gray-500" aria-live="polite">
-        目前沒有可用產區
-      </div>
-      <div id="region-loading" class="flex justify-center p-4">
+    <section id="countries-list" class="space-y-4 w-full" aria-label="國家列表區塊" tabindex="0">
+      <div id="overall-loading" class="flex justify-center p-4">
         <svg class="animate-spin h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" aria-label="載入中" role="status">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
         </svg>
-        <span class="ml-2">載入中...</span>
+        <span class="ml-2">載入國家資訊中...</span>
+      </div>
+      <div id="overall-empty" class="hidden text-center p-4 text-gray-500" aria-live="polite">
+        目前沒有可用的國家題庫
       </div>
     </section>
-    <div class="mb-4 p-4 bg-white rounded shadow">
+
+    <div class="mb-4 p-4 bg-white rounded shadow w-full">
       <label class="font-semibold block mb-2">選擇難易度：</label>
       <label class="inline-flex items-center mr-6">
         <input type="radio" name="difficulty" value="easy" checked class="mr-2" aria-checked="true" />
@@ -47,7 +48,7 @@
       </label>
     </div>
 
-    <div class="flex flex-wrap gap-3 mt-6">
+    <div class="flex flex-wrap gap-3 mt-6 w-full">
       <button
         id="uncheck-all"
         class="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300"
