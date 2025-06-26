@@ -32,7 +32,7 @@
             italy: { id: "1WLrMMYTPRjIxiWueFA1J3rfKzC34xbqver5tqCzP94s" },
             france: { id: "1-8sav2Dl1pi4EfnqNQhpMR0I-TjZhbaIUE6mrC1QbpU" },
             spain: { id: "1EeU1B3AF64S12XOIj9fLi-86_aMNcbmuEdKSBhsCpC4" },
-            germany: { id: "1M0yjlT-bXXFhrV-snoGEPw6WhyMSwSEf4O6f7K_zo9o" }, // FIXED: Consistent ID with select.js
+            germany: { id: "1M0yjlT-bXXFhrV-snoGEPw6WhyMSwSEf4O6f7K_zo9o" },
             usa: { id: "1ZsGBl0jHPhQu9nV3k5rJhJ4ZXkkrwSvA6qhY0RaTRxE" },
             hungary: { id: "1Rcf_mH4p1F05MhitSEkcjMaIU2mKmiXi77ifbOjfC14" },
             new_zealand: { id: "1O6TqxxB0YSitH9ySe3pncEx_Zl_kVtcJd2zslBDKw5Y" },
@@ -40,7 +40,7 @@
             portugal: { id: "18GCPNoDPXu9EcfPd0EmnpEJb0DsP7vQaoAdbGo9cMs4" },
             chile: { id: "1Dv2jeGsefsuCCyuu8uvMKkHd9NgNa7tV0Woo9FrBNEY" },
             south_africa: { id: "13K5yOvCJYZH6oiITdu5lyKH6a5az7octyuT3m7MzYEM" },
-            argentina: { id: "1qE_4coepB5_vevCF4KLcZq7MMnrLtgU5foTN8e4nmLY" } // Corrected potential typo if different
+            argentina: { id: "1qE_4coepB5_vevCF4KLDq7MMnrLtgU5foTN8e4nmLY" }
         };
 
         // 全局變數，用於儲存所有題目、當前題目索引、分數、難度及開始時間
@@ -57,7 +57,6 @@
 
         // 取得主要測驗相關的 DOM 元素引用
         const quizContainer = document.getElementById("quiz");
-        // These will be re-queried in startQuiz
         let questionBox = document.getElementById("question-box");
         let optionsBox = document.getElementById("options-box");
         let feedback = document.getElementById("feedback");
@@ -82,15 +81,15 @@
             try {
                 const fetches = selected.map(async key => {
                     const [countryKey, sheetName] = key.split("__");
-                    const sheetId = SHEET_INDEX[countryKey]?.id; // 使用 ?. 避免錯誤
+                    const sheetId = SHEET_INDEX[countryKey]?.id;
                     if (!sheetId) {
                         console.warn(`SHEET_INDEX 中未找到 ${countryKey} 的 ID。`);
                         return [];
                     }
-                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${API_KEY}`;
+                    const url = `https://sheets.googleapis.com/v4/spreadsheets/<span class="math-inline">\{sheetId\}/values/</span>{sheetName}?key=${API_KEY}`;
                     const res = await fetch(url);
                     if (!res.ok) {
-                        throw new Error(`HTTP 錯誤！狀態碼：${res.status}，網址：${url}`);
+                        throw new Error(`HTTP 錯誤！狀態碼：<span class="math-inline">\{res\.status\}，網址：</span>{url}`);
                     }
                     const data = await res.json();
                     const rows = data.values;
@@ -101,15 +100,14 @@
                     const headers = rows[0];
                     return rows.slice(1).map(row => {
                         const obj = {};
-                        headers.forEach((h, i) => obj[h] = row[i] || "");
+                        headers.forEach((h, i) => obj[h] = row[i] || ""); // <-- IMPORTANT: 使用 || "" 處理 undefined/null 值
                         return obj;
                     });
                 });
 
                 const results = await Promise.all(fetches);
-                allQuestions = results.flat().filter(q => q.Appellation); // 過濾掉沒有 Appellation 的題目
+                allQuestions = results.flat().filter(q => q.Appellation);
 
-                // 收集所有唯一的 Appellation，用於生成選項
                 allAppellations = [...new Set(allQuestions.map(q => q.Appellation))];
 
                 if (allQuestions.length === 0) {
@@ -117,7 +115,7 @@
                     return;
                 }
 
-                startQuiz(); // 開始測驗
+                startQuiz();
 
             } catch (error) {
                 console.error("載入測驗資料時出錯：", error);
@@ -127,17 +125,15 @@
 
         /**
          * 開始測驗
-         * 初始化分數、題目索引和計時器，並渲染第一道題目。
          */
         function startQuiz() {
             currentQuestionIndex = 0;
             score = 0;
             startTime = Date.now();
 
-            // 從 allQuestions 中隨機選取 QUIZ_LENGTH 題作為本次測驗的題目
-            currentQuizQuestions = [...allQuestions]; // 複製一份，以免影響 allQuestions
-            shuffle(currentQuizQuestions); // 先打亂所有題目
-            currentQuizQuestions = currentQuizQuestions.slice(0, QUIZ_LENGTH); // 取前 QUIZ_LENGTH 題
+            currentQuizQuestions = [...allQuestions];
+            shuffle(currentQuizQuestions);
+            currentQuizQuestions = currentQuizQuestions.slice(0, QUIZ_LENGTH);
 
             if (currentQuizQuestions.length === 0) {
                 quizContainer.innerHTML = '<p class="text-center text-red-500">沒有足夠的題目可以開始測驗，請嘗試選擇更多題庫。</p>';
@@ -150,7 +146,6 @@
                 <div id="options-box" class="mb-4"></div>
                 <div id="feedback" class="text-lg"></div>
             `;
-            // FIXED: Re-query DOM elements after innerHTML is updated
             questionBox = document.getElementById("question-box");
             optionsBox = document.getElementById("options-box");
             feedback = document.getElementById("feedback");
@@ -161,10 +156,8 @@
 
         /**
          * 渲染題目到頁面
-         * 根據當前題目索引和難度顯示題目內容和選項。
          */
         function renderQuestion() {
-            // 從 currentQuizQuestions 中獲取當前題目
             const q = currentQuizQuestions[currentQuestionIndex];
             if (!q) {
                 showResult();
@@ -173,197 +166,8 @@
 
             let questionText = "";
             if (difficulty === "easy") {
+                // 使用 || 'N/A' 或 || '' 在 undefined/null 值時顯示空字串或 'N/A'
                 questionText = `
-                    <div class="mb-2">這是款來自<b>${q.Country}</b> 的 <b>${q.Classification}</b></div>
-                    <div class="mb-2">酒的類型是：<b>${q.Wine_type}</b>, <b>${q.Sub_type}</b></div>
-                    <div class="mb-2">主要葡萄品種為：<b>${q.Grape_1}</b></div>
-                    <div class="mb-2">是否混釀：<b>${q.Is_blend}</b></div>
-                    <div class="mb-2">次要葡萄品種為：<b>${q.Grape_2}</b></div>
-                    <div class="mb-2">次產區：<b>${q.Sub_region}</b></div>
-                    <div class="my-4 font-semibold">請問這是哪個法定產區？</div>
-                `;
-            } else {
-                questionText = `
-                    這是款【${q.Wine_type}】，<br/>
-                    主要使用【${q.Grape_1}】釀製，<br/>
-                    請問這是哪個法定產區?
-                `;
-            }
-            questionBox.innerHTML = questionText;
-
-            progressIndicator.textContent = `第 ${currentQuestionIndex + 1} 題 / 共 ${currentQuizQuestions.length} 題`;
-
-            // 生成選項：從所有載入的 Appellation 中隨機挑選 3 個不同的錯誤選項
-            const correctAppellation = q.Appellation;
-            const options = [correctAppellation];
-            const availableAppellationsForOptions = allAppellations.filter(app => app !== correctAppellation); // 排除正確答案
-
-            shuffle(availableAppellationsForOptions); // 打亂可用選項
-
-            // 從打亂後的可用選項中選取，確保選項數量為4個
-            for (let i = 0; options.length < 4 && i < availableAppellationsForOptions.length; i++) {
-                options.push(availableAppellationsForOptions[i]);
-            }
-
-            // 如果可用選項不足以填充4個選項，則可能有重複，但這滿足「可以重複作為答案挑選」的要求
-            // 且「從勾選的Region裡挑選」的選項來源是 allAppellations，它包含了所有已載入產區的 Appellation
-            // 確保選項至少有4個，如果allAppellations數量不足，會重複加入。
-            while (options.length < 4) {
-                const randomApp = allAppellations[Math.floor(Math.random() * allAppellations.length)];
-                if (!options.includes(randomApp) || allAppellations.length < 4) { // 如果Appellation少於4個，允許重複
-                    options.push(randomApp);
-                }
-            }
-
-
-            shuffle(options); // 再次打亂最終的選項順序
-
-            optionsBox.innerHTML = "";
-            options.forEach(option => {
-                const btn = document.createElement("button");
-                btn.textContent = option;
-                btn.className = "block w-full text-left px-4 py-2 mb-2 bg-white border rounded hover:bg-blue-100";
-                btn.onclick = () => checkAnswer(option, correctAppellation);
-                optionsBox.appendChild(btn);
-            });
-            feedback.textContent = "";
-        }
-
-        /**
-         * 檢查用戶選擇的答案
-         * 根據選擇的答案是否正確更新分數並顯示回饋訊息。
-         */
-        function checkAnswer(selected, correct) {
-            Array.from(optionsBox.children).forEach(button => {
-                button.disabled = true;
-                if (button.textContent === correct) {
-                    button.classList.add("border-green-500", "bg-green-100", "font-bold");
-                } else if (button.textContent === selected) {
-                    button.classList.add("border-red-500", "bg-red-100");
-                }
-            });
-
-            if (selected === correct) {
-                score++;
-                feedback.textContent = "答對了！";
-                feedback.className = "text-green-600 mb-4 font-bold";
-                playSound("correct");
-            } else {
-                feedback.textContent = `答錯了，正確答案是：${correct}`;
-                feedback.className = "text-red-600 mb-4 font-bold";
-                playSound("wrong");
-            }
-
-            currentQuestionIndex++;
-            // 檢查是否達到QUIZ_LENGTH的題目數量，而不是allQuestions.length
-            if (currentQuestionIndex < QUIZ_LENGTH) {
-                setTimeout(() => {
-                    renderQuestion();
-                }, 1500);
-            } else {
-                setTimeout(showResult, 1500);
-            }
-        }
-
-        /**
-         * 顯示測驗結果
-         * 計算總耗時，顯示得分，並提供儲存成績到排行榜的功能。
-         */
-        function showResult() {
-            const totalTime = Math.round((Date.now() - startTime) / 1000);
-            // 總題目數現在是 QUIZ_LENGTH
-            const totalQ = QUIZ_LENGTH;
-
-            quizContainer.innerHTML = `
-                <div class="text-xl font-bold mb-4">🎉 測驗完成！</div>
-                <div class="mb-2">得分：${score} / ${totalQ}</div>
-                <div class="mb-4">耗時：${totalTime} 秒　｜　難度：${difficulty}</div>
-                <input id="player-name" type="text" placeholder="輸入暱稱儲存成績"
-                        class="border px-3 py-1 rounded w-full mb-4" />
-                <button id="save-btn" class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-6">儲存到排行榜</button>
-                <h3 class="font-semibold mb-2">🏆 排行榜（前 10 名）</h3>
-                <ol id="board" class="list-decimal list-inside mb-6"></ol>
-                <button onclick="toSelectPage()" class="w-full py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
-                    重新選擇題庫
-                </button>
-            `;
-
-            document.getElementById("save-btn").onclick = () =>
-                saveLeaderboard(totalQ, totalTime);
-
-            renderBoard();
-        }
-
-        /**
-         * 儲存成績到本地儲存的排行榜中
-         */
-        function saveLeaderboard(totalQ, totalTime) {
-            const name = document.getElementById("player-name").value.trim() || "玩家";
-            const record = {
-                name,
-                score,
-                totalQ,
-                time: totalTime,
-                difficulty,
-                date: new Date().toLocaleString()
-            };
-
-            const board = JSON.parse(localStorage.getItem("leaderboard") || "[]");
-            board.push(record);
-            board.sort((a, b) => b.score - a.score || a.time - b.time);
-            localStorage.setItem("leaderboard", JSON.stringify(board.slice(0, 10)));
-            renderBoard();
-            document.getElementById("player-name").value = "";
-        }
-
-        /**
-         * 渲染排行榜到頁面
-         */
-        function renderBoard() {
-            const list = document.getElementById("board");
-            if (!list) return;
-            const board = JSON.parse(localStorage.getItem("leaderboard") || "[]");
-            list.innerHTML = board
-                .map(
-                    (r, i) =>
-                        `<li>${r.name} - ${r.score}/${r.totalQ} 分 - ${r.time}s - ${r.difficulty.toUpperCase()} - ${r.date}</li>`
-                )
-                .join("");
-        }
-
-        /**
-         * 洗牌演算法 (Fisher-Yates shuffle)
-         * 隨機打亂陣列順序。
-         */
-        function shuffle(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        }
-
-        /**
-         * 播放音效
-         */
-        function playSound(type) {
-            const aud = document.getElementById(`aud-${type}`);
-            if (aud) {
-                aud.currentTime = 0;
-                aud.play().catch(e => console.warn(`音效播放失敗 (${type}):`, e));
-            }
-        }
-
-        /**
-         * 跳轉到選擇題庫頁面
-         */
-        function toSelectPage() {
-            location.href = "select.html";
-        }
-
-        // 事件監聽器
-        document.getElementById("btn-back").onclick = toSelectPage;
-        window.onload = loadQuizData;
-    </script>
-</body>
-</html>
+                    <div class="mb-2">這是款來自<b><span class="math-inline">\{q\.Country \|\| 'N/A'\}</b\> 的 <b\></span>{q.Classification || 'N/A'}</b></div>
+                    <div class="mb-2">酒的類型是：<b><span class="math-inline">\{q\.Wine\_type \|\| 'N/A'\}</b\>, <b\></span>{q.Sub_type || ''}</b></div>
+                    <div class="mb-2">主要葡萄品種為：<b><span class="math-inline">\{q\.Grape\_1 \|\| 'N/A'\}</b\></div\>
