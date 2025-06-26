@@ -86,10 +86,10 @@
                         console.warn(`SHEET_INDEX 中未找到 ${countryKey} 的 ID。`);
                         return [];
                     }
-                    const url = `https://sheets.googleapis.com/v4/spreadsheets/<span class="math-inline">\{sheetId\}/values/</span>{sheetName}?key=${API_KEY}`;
+                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${API_KEY}`;
                     const res = await fetch(url);
                     if (!res.ok) {
-                        throw new Error(`HTTP 錯誤！狀態碼：<span class="math-inline">\{res\.status\}，網址：</span>{url}`);
+                        throw new Error(`HTTP 錯誤！狀態碼：${res.status}，網址：${url}`);
                     }
                     const data = await res.json();
                     const rows = data.values;
@@ -168,6 +168,185 @@
             if (difficulty === "easy") {
                 // 使用 || 'N/A' 或 || '' 在 undefined/null 值時顯示空字串或 'N/A'
                 questionText = `
-                    <div class="mb-2">這是款來自<b><span class="math-inline">\{q\.Country \|\| 'N/A'\}</b\> 的 <b\></span>{q.Classification || 'N/A'}</b></div>
-                    <div class="mb-2">酒的類型是：<b><span class="math-inline">\{q\.Wine\_type \|\| 'N/A'\}</b\>, <b\></span>{q.Sub_type || ''}</b></div>
-                    <div class="mb-2">主要葡萄品種為：<b><span class="math-inline">\{q\.Grape\_1 \|\| 'N/A'\}</b\></div\>
+                    <div class="mb-2">這是款來自<b>${q.Country || 'N/A'}</b> 的 <b>${q.Classification || 'N/A'}</b></div>
+                    <div class="mb-2">酒的類型是：<b>${q.Wine_type || 'N/A'}</b>, <b>${q.Sub_type || ''}</b></div>
+                    <div class="mb-2">主要葡萄品種為：<b>${q.Grape_1 || 'N/A'}</b></div>
+                    <div class="mb-2">是否混釀：<b>${q.Is_blend || 'N/A'}</b></div>
+                    <div class="mb-2">次要葡萄品種為：<b>${q.Grape_2 || ''}</b></div>
+                    <div class="mb-2">次產區：<b>${q.Sub_region || ''}</b></div>
+                    <div class="my-4 font-semibold">請問這是哪個法定產區？</div>
+                `;
+            } else {
+                questionText = `
+                    這是款【${q.Wine_type || 'N/A'}】，<br/>
+                    主要使用【${q.Grape_1 || 'N/A'}】釀製，<br/>
+                    請問這是哪個法定產區?
+                `;
+            }
+            questionBox.innerHTML = questionText;
+
+            progressIndicator.textContent = `第 ${currentQuestionIndex + 1} 題 / 共 ${currentQuizQuestions.length} 題`;
+
+            const correctAppellation = q.Appellation;
+            const options = [correctAppellation];
+            const availableAppellationsForOptions = allAppellations.filter(app => app !== correctAppellation);
+
+            shuffle(availableAppellationsForOptions);
+
+            for (let i = 0; options.length < 4 && i < availableAppellationsForOptions.length; i++) {
+                options.push(availableAppellationsForOptions[i]);
+            }
+
+            while (options.length < 4) {
+                const randomApp = allAppellations[Math.floor(Math.random() * allAppellations.length)];
+                if (!options.includes(randomApp) || allAppellations.length < 4) {
+                    options.push(randomApp);
+                }
+            }
+
+            shuffle(options);
+
+            optionsBox.innerHTML = "";
+            options.forEach(option => {
+                const btn = document.createElement("button");
+                btn.textContent = option;
+                btn.className = "block w-full text-left px-4 py-2 mb-2 bg-white border rounded hover:bg-blue-100";
+                btn.onclick = () => checkAnswer(option, correctAppellation);
+                optionsBox.appendChild(btn);
+            });
+            feedback.textContent = "";
+        }
+
+        /**
+         * 檢查用戶選擇的答案
+         */
+        function checkAnswer(selected, correct) {
+            Array.from(optionsBox.children).forEach(button => {
+                button.disabled = true;
+                if (button.textContent === correct) {
+                    button.classList.add("border-green-500", "bg-green-100", "font-bold");
+                } else if (button.textContent === selected) {
+                    button.classList.add("border-red-500", "bg-red-100");
+                }
+            });
+
+            if (selected === correct) {
+                score++;
+                feedback.textContent = "答對了！";
+                feedback.className = "text-green-600 mb-4 font-bold";
+                playSound("correct");
+            } else {
+                feedback.textContent = `答錯了，正確答案是：${correct}`;
+                feedback.className = "text-red-600 mb-4 font-bold";
+                playSound("wrong");
+            }
+
+            currentQuestionIndex++;
+            if (currentQuestionIndex < QUIZ_LENGTH) {
+                setTimeout(() => {
+                    renderQuestion();
+                }, 1500);
+            } else {
+                setTimeout(showResult, 1500);
+            }
+        }
+
+        /**
+         * 顯示測驗結果
+         */
+        function showResult() {
+            const totalTime = Math.round((Date.now() - startTime) / 1000);
+            const totalQ = QUIZ_LENGTH;
+
+            quizContainer.innerHTML = `
+                <div class="text-xl font-bold mb-4">🎉 測驗完成！</div>
+                <div class="mb-2">得分：${score} / ${totalQ}</div>
+                <div class="mb-4">耗時：${totalTime} 秒　｜　難度：${difficulty}</div>
+                <input id="player-name" type="text" placeholder="輸入暱稱儲存成績"
+                        class="border px-3 py-1 rounded w-full mb-4" />
+                <button id="save-btn" class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-6">儲存到排行榜</button>
+                <h3 class="font-semibold mb-2">🏆 排行榜（前 10 名）</h3>
+                <ol id="board" class="list-decimal list-inside mb-6"></ol>
+                <button onclick="toSelectPage()" class="w-full py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                    重新選擇題庫
+                </button>
+            `;
+
+            document.getElementById("save-btn").onclick = () =>
+                saveLeaderboard(totalQ, totalTime);
+
+            renderBoard();
+        }
+
+        /**
+         * 儲存成績到本地儲存的排行榜中
+         */
+        function saveLeaderboard(totalQ, totalTime) {
+            const name = document.getElementById("player-name").value.trim() || "玩家";
+            const record = {
+                name,
+                score,
+                totalQ,
+                time: totalTime,
+                difficulty,
+                date: new Date().toLocaleString()
+            };
+
+            const board = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+            board.push(record);
+            board.sort((a, b) => b.score - a.score || a.time - b.time);
+            localStorage.setItem("leaderboard", JSON.stringify(board.slice(0, 10)));
+            renderBoard();
+            document.getElementById("player-name").value = "";
+        }
+
+        /**
+         * 渲染排行榜到頁面
+         */
+        function renderBoard() {
+            const list = document.getElementById("board");
+            if (!list) return;
+            const board = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+            list.innerHTML = board
+                .map(
+                    (r, i) =>
+                        `<li>${r.name} - ${r.score}/${r.totalQ} 分 - ${r.time}s - ${r.difficulty.toUpperCase()} - ${r.date}</li>`
+                )
+                .join("");
+        }
+
+        /**
+         * 洗牌演算法 (Fisher-Yates shuffle)
+         */
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        /**
+         * 播放音效
+         */
+        function playSound(type) {
+            const aud = document.getElementById(`aud-${type}`);
+            if (aud) {
+                aud.currentTime = 0;
+                aud.play().catch(e => console.warn(`音效播放失敗 (${type}):`, e));
+            }
+        }
+
+        /**
+         * 跳轉到選擇題庫頁面
+         */
+        function toSelectPage() {
+            location.href = "select.html";
+        }
+
+        // 事件監聽器
+        document.getElementById("btn-back").onclick = toSelectPage;
+        window.onload = loadQuizData;
+    </script>
+</body>
+</html>
